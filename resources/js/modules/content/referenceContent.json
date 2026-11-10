@@ -1,0 +1,67 @@
+{
+  "policies": {
+    "envio": {
+      "title": "🚚 Política de Envíos",
+      "body": "\n    <h4>Cobertura</h4><p>Enviamos a todo el territorio colombiano.</p>\n    <h4>Tiempo de procesamiento</h4><p>Todos los pedidos se procesan en un plazo de 1 a 3 días hábiles desde la confirmación del pago.</p>\n    <h4>Tiempos de entrega estimados</h4><ul><li><strong>Bogotá:</strong> 24 horas hábiles</li><li><strong>Ciudades principales:</strong> 2–4 días hábiles</li><li><strong>Resto del país:</strong> 3–5 días hábiles</li></ul>\n    <h4>Costos de envío</h4><p>El costo se calcula automáticamente en el proceso de compra. En ocasiones ofrecemos envíos gratis por promociones especiales.</p>\n    <h4>Seguimiento</h4><p>Usamos servicios de mensajería confiables y te compartiremos un número de guía para seguimiento una vez despachado tu pedido.</p>\n  "
+    },
+    "reembolso": {
+      "title": "🔁 Política de Devoluciones y Cambios",
+      "body": "\n    <h4>¿Qué productos pueden devolverse?</h4><ul><li>Accesorios sin uso, en su empaque original</li><li>Café sin abrir y dentro de los 3 días posteriores a la entrega</li></ul>\n    <h4>¿Qué productos NO tienen cambio?</h4><ul><li>Café abierto o parcialmente consumido</li><li>Kits personalizados o promocionales</li></ul>\n    <h4>¿Cómo solicitar un cambio o devolución?</h4><ol><li>Escríbenos a <strong>comercial@cafefincahelena.com</strong> con el número de pedido.</li><li>Indícanos el motivo del cambio o devolución.</li><li>Te indicaremos el proceso para enviarnos el producto.</li></ol>\n    <h4>Reembolsos</h4><p>El reembolso se hará dentro de los 5 días hábiles tras la recepción del producto y verificación del estado, al mismo método de pago usado en la compra.</p>\n  "
+    },
+    "privacidad": {
+      "title": "📜 Política de Privacidad",
+      "body": "\n    <h4>Vigencia</h4><p>Fecha de entrada en vigencia: 16 de octubre de 2025. En Finca Helena valoramos tu privacidad y protegemos tus datos personales conforme a la Ley 1581 de 2012 y demás normas aplicables en Colombia.</p>\n    <h4>¿Qué datos recolectamos?</h4><ul><li>Nombre completo</li><li>Dirección de envío</li><li>Correo electrónico</li><li>Teléfono</li><li>Información de pago (procesada de forma segura por pasarelas externas)</li></ul>\n    <h4>¿Para qué usamos tus datos?</h4><ul><li>Procesar y entregar pedidos</li><li>Gestionar pagos</li><li>Atender solicitudes y consultas</li><li>Enviar comunicaciones promocionales (con tu consentimiento)</li></ul>\n    <h4>Seguridad de la información</h4><p>Usamos medidas de seguridad físicas, electrónicas y administrativas para proteger tus datos. No vendemos ni compartimos tu información con terceros sin tu autorización, salvo requerimientos legales.</p>\n    <h4>Tus derechos</h4><p>Puedes solicitar acceso, rectificación, actualización o eliminación de tus datos enviando un correo a: <strong>comercial@cafefincahelena.com</strong></p>\n  "
+    },
+    "terminos": {
+      "title": "📑 Términos y Condiciones",
+      "body": "\n    <h4>1. Productos</h4><p>Nuestros productos incluyen café de origen colombiano y accesorios relacionados. Las imágenes son ilustrativas y pueden variar ligeramente.</p>\n    <h4>2. Precios y pagos</h4><p>Todos los precios están en pesos colombianos (COP) e incluyen impuestos. Los pagos se realizan a través de plataformas seguras.</p>\n    <h4>3. Envíos</h4><p>Realizamos envíos a toda Colombia. Los tiempos de entrega dependen de la ubicación; consulta la Política de envíos.</p>\n    <h4>4. Cambios y devoluciones</h4><p>Aceptamos devoluciones en un plazo de 5 días después de recibir el producto, siempre que esté en perfectas condiciones. No se aceptan devoluciones de productos abiertos (como bolsas de café).</p>\n    <h4>5. Responsabilidad</h4><p>No nos hacemos responsables por demoras imputables a terceros (transportadoras) ni por el mal uso de los productos por parte del comprador.</p>\n  "
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "body": "\n    <h4>¿Cómo hago un pedido?</h4><p>Agrega los productos al carrito y finaliza tu compra en línea, o escríbenos directamente por WhatsApp.</p>\n    <h4>¿Cuánto tardan en entregar?</h4><p>Bogotá: 24 horas hábiles. Ciudades principales: 2–4 días. Resto del país: 3–5 días hábiles.</p>\n    <h4>¿El café llega molido o en grano?</h4><p>Ambas opciones disponibles. Selecciona la presentación que prefieras en la tienda.</p>\n    <h4>¿Hay pedido mínimo?</h4><p>No manejamos mínimo para pedidos individuales. Para compras al por mayor contáctanos por WhatsApp.</p>\n    <h4>¿Qué medios de pago aceptan?</h4><p>Pago en línea a través de Wompi (tarjetas, PSE, Nequi) o coordinación de pago por WhatsApp.</p>\n    <h4>¿Puedo hacer seguimiento a mi pedido?</h4><p>Sí. Una vez despachado te enviamos el número de guía y transportadora asignada por WhatsApp.</p>\n    <h4>Mi pedido llegó incompleto o dañado, ¿qué hago?</h4><p>Repórtalo dentro de las 48 horas a <strong>comercial@cafefincahelena.com</strong> adjuntando foto del producto. Revisamos tu caso en máximo 5 días hábiles.</p>\n    <h4>¿Hacen envíos internacionales?</h4><p>Sí, realizamos envíos a cualquier país del mundo. Solo necesitas contactarnos para coordinar el destino y los detalles.</p>\n    <h4>¿Puedo hacer pedidos personalizados para regalos o eventos?</h4><p>¡Por supuesto! Ofrecemos opciones de empaques personalizados ideales para regalos, bodas, eventos de empresa y más.</p>\n    <h4>¿Cómo puedo comprar café al por mayor para mi cafetería u hotel?</h4><p>Tenemos opciones especiales para distribución. Escríbenos a través del formulario y nuestro equipo comercial te contactará.</p>\n    <h4>¿El café es de origen colombiano?</h4><p>100% colombiano, cultivado y procesado en nuestra finca con prácticas sostenibles.</p>\n  "
+    }
+  },
+  "faqs": [
+    [
+      "¿Cómo hago un pedido?",
+      "Agrega los productos al carrito y finaliza tu compra en línea, o escríbenos directamente por WhatsApp."
+    ],
+    [
+      "¿Cuánto tardan en entregar?",
+      "Bogotá: 24 horas hábiles. Ciudades principales: 2 a 4 días hábiles. Resto del país: 3 a 5 días hábiles."
+    ],
+    [
+      "¿El café llega molido o en grano?",
+      "Ambas opciones están disponibles. Selecciona la presentación que prefieras en la tienda."
+    ],
+    [
+      "¿Hay pedido mínimo?",
+      "No manejamos mínimo para pedidos individuales. Para compras al por mayor contáctanos por WhatsApp."
+    ],
+    [
+      "¿Qué medios de pago aceptan?",
+      "Pago en línea a través de Wompi (tarjetas, PSE, Nequi) o coordinación de pago por WhatsApp."
+    ],
+    [
+      "¿Puedo hacer seguimiento a mi pedido?",
+      "Sí. Al correo que registres en tu compra te enviaremos el estado de tu pedido. Una vez despachado, también te compartimos el número de guía y la transportadora asignada por WhatsApp."
+    ],
+    [
+      "¿Hacen envíos internacionales?",
+      "Sí. Escríbenos para coordinar el destino y los detalles del envío."
+    ],
+    [
+      "¿Venden café al por mayor?",
+      "Sí. Tenemos opciones especiales para cafeterías, hoteles y distribuidores. Escríbenos por WhatsApp."
+    ],
+    [
+      "¿El café es de origen colombiano?",
+      "100% colombiano, variedad Castillo, cultivado a 1.800 m.s.n.m. en Norte de Santander."
+    ]
+  ],
+  "bodies": {
+    "cafe-en-prensa-francesa": "\n<p>La prensa francesa es uno de los métodos más fáciles para disfrutar un café con cuerpo. No necesita filtros de papel y deja pasar los aceites naturales del grano.</p>\n<h2>Lo que necesitas</h2>\n<ul><li>Prensa francesa</li><li>30 g de café (unas 4 cucharadas) para 500 ml de agua</li><li>Molienda gruesa, similar a la sal marina</li><li>Agua a 92–96 °C</li></ul>\n<h2>Paso a paso</h2>\n<ol><li>Precalienta la prensa con un poco de agua caliente y descártala.</li><li>Agrega el café molido.</li><li>Vierte la mitad del agua, revuelve suavemente y espera 30 segundos.</li><li>Completa con el resto del agua y tapa sin bajar el émbolo.</li><li>Espera 4 minutos.</li><li>Baja el émbolo despacio y sirve de inmediato.</li></ol>\n<h2>Consejos</h2>\n<p>Si la taza sale amarga, muele más grueso o reduce el tiempo. Si sale aguada, aumenta un poco la cantidad de café. Con Café Finca Helena en grano obtienes la mejor frescura.</p>\n    ",
+    "helena-mujeres-caficultoras": "\n<p>Helena es mucho más que un nombre. Es la voz colectiva de las caficultoras del Catatumbo: es mujer, es comunidad, es resistencia y esperanza.</p>\n<h2>Un símbolo de quienes siembran vida</h2>\n<p>Es la joven que cultiva café y sueños. Es la madre que enseña el valor de la tierra. La abuela que transmite la memoria. El niño que juega entre cafetales, soñando con la paz.</p>\n<h2>Del Catatumbo a tu taza</h2>\n<p>En las montañas del Norte de Santander, más de 2.700 caficultores cultivan Café Finca Helena a 1.800 m.s.n.m. Cada bolsa conecta tu mesa con esas familias y con prácticas comprometidas con la sostenibilidad y el comercio justo.</p>\n<p><strong>Helena no es solo una mujer. Helena somos todos.</strong></p>\n    ",
+    "tostion-media-baja": "\n<p>La tostión es el momento en que el grano verde se transforma en el café que reconoces por su aroma. El tiempo y la temperatura definen el resultado: a más tostión, más amargor y cuerpo; a menos, más acidez y notas de origen.</p>\n<h2>¿Qué es una tostión media-baja?</h2>\n<p>Es un punto intermedio en el que el grano desarrolla dulzor sin perder la acidez ni los aromas propios de la finca. El color queda en un marrón medio, sin aceite en la superficie.</p>\n<h2>Por qué la elegimos para Café Finca Helena</h2>\n<p>Nuestro café, variedad Castillo cultivada a 1.800 m.s.n.m. en Norte de Santander, tiene notas dulces de panela y nuez, una acidez cítrica media y aroma floral con toques de madera. Una tostión más oscura taparía esas notas; la media-baja las deja ver.</p>\n<ul><li><strong>Suavidad:</strong> menos amargor en taza.</li><li><strong>Equilibrio:</strong> acidez y dulzor en armonía.</li><li><strong>Origen:</strong> el sabor del Catatumbo se reconoce.</li></ul>\n<h2>Cómo aprovecharla en casa</h2>\n<p>Prepáralo con agua entre 90 y 96 °C, nunca hirviendo, y usa una proporción cercana a 1 gramo de café por cada 15 a 17 ml de agua. Si compras en grano, muele justo antes de preparar.</p>\n    "
+  }
+}

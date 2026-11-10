@@ -1,0 +1,13 @@
+import { referenceImage } from '../../components/referenceImages';
+import { useStorefront } from '../../context/StorefrontContext';
+
+const reviews = [['Laura M.','Suave y con un aroma delicioso. Ya es el café de la casa.'],['Andrés P.','Llegó rápido y bien empacado. Se nota la frescura.'],['Camila R.','Me encanta saber que apoyo a las caficultoras del Catatumbo.'],['Jorge L.','Equilibrado, nada amargo. Lo preparo en greca y queda perfecto.'],['Diana C.','Lo regalé en la oficina y todos preguntaron dónde comprarlo.'],['Felipe G.','El grano entero huele increíble al molerlo.'],['Natalia S.','Buen cuerpo y notas florales. Repito sin duda.'],['Carlos V.','Excelente relación calidad-precio.'],['Paola T.','En prensa francesa sale muy limpio y aromático.']];
+export const money = value => '$' + Math.round(value).toLocaleString('es-CO');
+export default function ProductCard({ product }) {
+    const { cart, changeQuantity } = useStorefront();
+    const qty = cart[product.id] || 0;
+    const sub = product.category === 'Promociones' ? 'Ofertas' : product.variant === 'Grano entero' ? 'Tostado en Grano' : 'Molido';
+    return <article className="card" id={`producto-${product.id}`}><div className="card-img"><img src={referenceImage(`${product.image}.webp`)} alt={`Café Finca Helena ${product.name} — ${product.variant}`} loading="lazy" width="400" height="400" /><div className="card-sub-badge" style={sub === 'Tostado en Grano' ? {background:'#3B1F0E'} : undefined}>{sub}</div>{product.category === 'Promociones' && <div className="card-promo-badge">-{product.id === 11 ? '12%' : '10%'}</div>}</div>
+        <div className="card-body"><h3>{product.name}</h3><div className="card-pres">{product.variant}</div><p className="card-desc">{product.description}</p><details className="card-rev"><summary><span className="stars">★★★★★</span> 3 opiniones</summary>{[0,1,2].map(i => { const review = reviews[(product.id * 2 + i * 3) % reviews.length]; return <blockquote key={i}>“{review[1]}”<cite>— {review[0]}</cite></blockquote>; })}</details><div className="card-price">{money(product.price)}</div>
+        <div className="card-actions"><div className="qty-stepper"><button type="button" aria-label={`Reducir cantidad de ${product.name}`} onClick={() => changeQuantity(product.id, qty - 1)}>−</button><span>{qty}</span><button type="button" aria-label={`Aumentar cantidad de ${product.name}`} onClick={() => changeQuantity(product.id, qty + 1)}>+</button></div><button type="button" className={`add-btn ${qty ? 'added' : ''}`} onClick={() => changeQuantity(product.id, qty || 1)}>{qty ? 'Agregado ✓' : 'Agregar'}</button></div>{product.category === 'Promociones' && <div className="card-codigo">Código: HELENA10</div>}</div></article>;
+}
