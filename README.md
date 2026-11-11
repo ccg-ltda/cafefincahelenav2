@@ -8,7 +8,7 @@ Con las dependencias instaladas, iniciar en dos terminales desde la raíz:
 
 ```powershell
 php artisan serve
-npm.cmd run dev
+npm run dev
 ```
 
 Abrir `http://127.0.0.1:8000`. Para compilar los recursos sin el servidor de Vite, ejecutar `npm.cmd run build`.
