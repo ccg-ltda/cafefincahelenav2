@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductVariant extends Model
 {
@@ -18,7 +19,15 @@ class ProductVariant extends Model
             'weight_grams' => 'integer',
             'price_cop' => 'integer',
             'is_published' => 'boolean',
+            'stock_quantity' => 'integer',
+            'low_stock_threshold' => 'integer',
         ];
+    }
+
+    // `stock_quantity` is not fillable on purpose : it only changes through InventoryService movements.
+    public function movements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
     }
 
     public function product(): BelongsTo
