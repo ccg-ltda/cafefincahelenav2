@@ -81,7 +81,7 @@ export default function AdminCustomerDrawer({ id, onClose, onChanged }) {
                     {state === 'error' && <p className="admin-categories-alert" role="alert">No se pudo cargar el cliente.</p>}
                     {state === 'success' && <>
                         <section className="admin-customer-section"><h3>Contacto</h3><dl>
-                            <div><dt>Correo</dt><dd>{customer.email}</dd></div>
+                            <div><dt>Correo</dt><dd>{customer.email || 'Sin correo'}</dd></div>
                             <div><dt>Celular</dt><dd>{customer.phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')}</dd></div>
                             <div><dt>Ciudad</dt><dd>{customer.city}{customer.department ? `, ${customer.department}` : ''}</dd></div>
                             <div><dt>Última dirección</dt><dd>{customer.last_address || '—'}{customer.last_address_details ? ` — ${customer.last_address_details}` : ''}</dd></div>

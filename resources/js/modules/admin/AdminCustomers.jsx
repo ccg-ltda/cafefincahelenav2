@@ -117,7 +117,7 @@ export default function AdminCustomers() {
             {state === 'success' && result.data.length > 0 ? <div className="admin-products-scroll" tabIndex="0" role="region" aria-label="Tabla de clientes, desplazable horizontalmente"><table className="admin-products-table admin-customers-table">
                 <thead><tr><th scope="col">Cliente</th><th scope="col">Ciudad</th>{sortHead('orders', 'Pedidos')}{sortHead('spent', 'Gastado')}{sortHead('last', 'Última compra')}<th scope="col">Promociones</th><th scope="col"><span className="admin-customers-sr">Acciones</span></th></tr></thead>
                 {result.data.map(row => <tbody key={row.id}><tr className="admin-products-row admin-customers-row" onClick={() => setDrawerId(row.id)}>
-                    <td data-label="Cliente"><div><button type="button" className="admin-customers-name" onClick={event => { event.stopPropagation(); setDrawerId(row.id); }} aria-label={`Ver detalle de ${titleCase(row.name)}`}>{titleCase(row.name)}</button><small>{row.email}</small></div></td>
+                    <td data-label="Cliente"><div><button type="button" className="admin-customers-name" onClick={event => { event.stopPropagation(); setDrawerId(row.id); }} aria-label={`Ver detalle de ${titleCase(row.name)}`}>{titleCase(row.name)}</button><small>{row.email || 'Sin correo'}</small></div></td>
                     <td data-label="Ciudad">{row.city}</td>
                     <td data-label="Pedidos" className="admin-customers-num">{number(row.orders_count)}</td>
                     <td data-label="Gastado" className="admin-customers-money">{money(row.spent_cop)}</td>

@@ -20,9 +20,9 @@ class SavePromotionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'product_id' => ['required', 'integer', 'min:1', 'max:999999999999', 'exists:products,id'],
             'variant_ids' => ['required', 'array', 'min:1', 'max:100'],
-            'variant_ids.*' => ['integer', 'distinct', 'min:1'],
+            'variant_ids.*' => ['integer', 'distinct', 'min:1', 'max:999999999999'],
             'discount_type' => ['required', Rule::in(PromotionService::TYPES)],
             'discount_value' => ['required', 'integer', 'min:1', 'max:100000000'],
             'is_active' => ['required', 'boolean'],

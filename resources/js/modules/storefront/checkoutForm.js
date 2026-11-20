@@ -92,4 +92,27 @@ export function clearCheckout() {
     }
 }
 
+/**
+ * The order of this cart was cancelled (by the customer or by expiry): the typed data stays, but the idempotency key goes. Reusing it
+ * would make the server answer with the cancelled order instead of creating a new one.
+ */
+export function dropCheckoutKey() {
+    try {
+        const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? 'null');
+        if (saved && typeof saved === 'object') window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...saved, key: null, signature: null }));
+    } catch {
+        // Nothing saved or storage unavailable.
+    }
+}
+
+/** The email typed at checkout, kept in `cfh-checkout` until the payment is approved: it is what proves the pending order is theirs. */
+export function savedCheckoutEmail() {
+    try {
+        const email = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? 'null')?.data?.customer_email;
+        return typeof email === 'string' && email.trim() ? email.trim() : null;
+    } catch {
+        return null;
+    }
+}
+
 export { newKey };

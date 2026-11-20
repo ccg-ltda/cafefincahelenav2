@@ -34,19 +34,19 @@ class AdminOrderStatusController extends Controller
     public function ship(Request $request, int $order): JsonResponse
     {
         $data = $request->validate([
-            'delivery_user_id' => ['nullable', 'integer', 'min:1'],
+            'delivery_user_id' => ['nullable', 'integer', 'min:1', 'max:999999999999'],
             'carrier' => ['nullable', 'string', 'max:100'],
             'tracking_number' => ['nullable', 'string', 'max:100'],
             'note' => ['nullable', 'string', 'max:500'],
-            'expected_status' => ['nullable', 'string', 'max:40'],
+            'expected_status' => ['required', 'string', 'max:40'],
         ], [], ['delivery_user_id' => 'repartidor', 'carrier' => 'transportadora', 'tracking_number' => 'guía']);
 
-        return $this->respond($request, $this->statuses->ship(Order::findOrFail($order), $request->user(), $data, $data['note'] ?? null, $data['expected_status'] ?? null));
+        return $this->respond($request, $this->statuses->ship(Order::findOrFail($order), $request->user(), $data, $data['note'] ?? null, $data['expected_status']));
     }
 
     public function reassign(Request $request, int $order): JsonResponse
     {
-        $data = $request->validate(['delivery_user_id' => ['required', 'integer', 'min:1']], [], ['delivery_user_id' => 'repartidor']);
+        $data = $request->validate(['delivery_user_id' => ['required', 'integer', 'min:1', 'max:999999999999']], [], ['delivery_user_id' => 'repartidor']);
 
         return $this->respond($request, $this->statuses->reassign(Order::findOrFail($order), $request->user(), (int) $data['delivery_user_id']));
     }
@@ -61,9 +61,9 @@ class AdminOrderStatusController extends Controller
     /** @return array{0: ?string, 1: ?string} note, expected status */
     private function common(Request $request): array
     {
-        $data = $request->validate(['note' => ['nullable', 'string', 'max:500'], 'expected_status' => ['nullable', 'string', 'max:40']]);
+        $data = $request->validate(['note' => ['nullable', 'string', 'max:500'], 'expected_status' => ['required', 'string', 'max:40']]);
 
-        return [$data['note'] ?? null, $data['expected_status'] ?? null];
+        return [$data['note'] ?? null, $data['expected_status']];
     }
 
     private function respond(Request $request, Order $order): JsonResponse

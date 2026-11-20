@@ -28,12 +28,13 @@ class AdminOrderController extends Controller
             'status' => ['sometimes', 'nullable', 'string', 'max:40'],
             'payment_status' => ['sometimes', 'nullable', 'string', 'max:40'],
             'coupon' => ['sometimes', 'nullable', 'in:with,without'],
+            'channel' => ['sometimes', 'nullable', 'in:web,manual'],
         ]);
 
         $scope = fn () => $this->scoped(Order::query(), $user);
         $query = $scope()->select('orders.*');
         if ($financial) {
-            $query->selectRaw(OrderPresenter::VERIFIED_PAYMENT.' as payment_verified');
+            $query->selectRaw(OrderPresenter::VERIFIED_PAYMENT.' as payment_verified, '.OrderPresenter::PAYMENT_ALERT.' as payment_alert');
         }
         $search = trim((string) ($filters['search'] ?? ''));
         if ($search !== '') {
@@ -51,6 +52,9 @@ class AdminOrderController extends Controller
         }
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
+        }
+        if (! empty($filters['channel'])) {
+            $query->where('orders.channel', $filters['channel']);
         }
         if ($financial) {
             if (! empty($filters['payment_status'])) {
@@ -85,7 +89,7 @@ class AdminOrderController extends Controller
         $user = $request->user();
         $financial = $user->hasPermission('orders.view_financials');
         $found = Order::query()->select('orders.*')
-            ->when($financial, fn ($query) => $query->selectRaw(OrderPresenter::VERIFIED_PAYMENT.' as payment_verified'))
+            ->when($financial, fn ($query) => $query->selectRaw(OrderPresenter::VERIFIED_PAYMENT.' as payment_verified, '.OrderPresenter::PAYMENT_ALERT.' as payment_alert'))
             ->with(['items' => fn ($query) => $query->orderBy('id'), 'history.user:id,name', 'assignedDelivery:id,name'] + ($financial ? ['payments' => fn ($query) => $query->orderBy('id')] : []))
             ->findOrFail($order);
 

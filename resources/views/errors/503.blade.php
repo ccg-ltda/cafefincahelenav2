@@ -1,0 +1,5 @@
+@extends('errors::layout')
+@section('title', 'En mantenimiento')
+@section('code', '503')
+@section('heading', 'Estamos haciendo mejoras')
+@section('message', 'Volvemos en unos minutos. Gracias por tu paciencia.')

@@ -3,14 +3,15 @@ import { createPortal } from 'react-dom';
 import { ArrowLeft, ArrowRight, Check, Coffee, Copy, Tags, X } from 'lucide-react';
 import { money } from '../catalog/ProductCard';
 import { useStorefront } from '../../context/StorefrontContext';
-import { rememberLastOrder } from './shop';
+import { paymentsEnabled, rememberLastOrder, whatsappLink } from './shop';
+import { clearPendingOrder, savePendingOrder } from './pendingOrder';
 import { DEPARTMENTS, EMPTY_CONSENT, cartSignature, clearCheckout, loadCheckout, newKey, normalizePhone, saveCheckout, stepOf, validateStep } from './checkoutForm';
 
 // TODO(legal): the terms and the personal-data policy (Ley 1581 de 2012) shown by `setPolicy` are reference
 // text pending commercial validation. They MUST be written and approved before going to production.
 
-// Registers the order in the backend. This is NOT a payment: the order is stored as pending and the
-// payment is not processed here, so nothing in this flow says the purchase was paid.
+// Registers the order in the backend (pending) and sends the customer to the Wompi Web Checkout to pay it. The browser never holds a
+// secret: the server builds the signed checkout URL. The result page (/pago/resultado) and the webhook confirm the payment, never this modal.
 const LABELS = ['Datos', 'Entrega', 'Resumen', 'Listo'];
 // Coupon block of step 3. The rules (and the amount) are the backend's: the quote answers with `coupon` or `coupon_error`.
 const PROMO_CODES_ENABLED = true;
@@ -18,6 +19,8 @@ const formatPhone = phone => (/^\d{10}$/.test(phone) ? `${phone.slice(0, 3)} ${p
 
 export default function CheckoutModal({ items, onClose, onRegistered, onFix }) {
     const { setPolicy } = useStorefront();
+    const payments = paymentsEnabled(); // false without valid Wompi keys: the checkout does not take orders
+    const leaving = useRef(false); // true once the browser is on its way to Wompi
     const signature = cartSignature(items);
     const [initial] = useState(() => loadCheckout(signature));
     const [step, setStep] = useState(initial.step);
@@ -126,7 +129,7 @@ export default function CheckoutModal({ items, onClose, onRegistered, onFix }) {
     const short = quote.status === 'ready' ? quoted.filter(line => line.insufficient) : [];
     const issueKeys = [...unavailable.map(item => `u:${item.id}`), ...changed.map(item => `c:${item.id}:${byId.get(item.id).unit_price_cop}`), ...short.map(line => `s:${line.variant_id}:${line.available_quantity}:${line.quantity}`)];
     const needsReview = issueKeys.some(issueKey => !reviewed.has(issueKey));
-    const canConfirm = !busy && items.length > 0 && quote.status === 'ready' && !needsReview;
+    const canConfirm = payments && !busy && items.length > 0 && quote.status === 'ready' && !needsReview;
 
     function acceptChanges() {
         setReviewed(current => new Set([...current, ...issueKeys]));
@@ -155,9 +158,11 @@ export default function CheckoutModal({ items, onClose, onRegistered, onFix }) {
             });
             const body = await response.json().catch(() => ({}));
             if (response.ok && body.order) {
-                clearCheckout(); // Confirmed: drop the saved progress and the key.
+                // The order exists (pending). The cart and the saved progress stay until the payment is approved
+                // (/pago/resultado clears them), so a rejected payment can be retried on the SAME order, without a new key.
+                savePendingOrder(body.order); // reference + total only: if the customer comes back without paying, the store reminds them
                 rememberLastOrder(body.order.reference); // the WhatsApp menu uses it for "Soporte de mi pedido" (7 days)
-                setOrder(body.order); setStep(4); onRegistered();
+                await startPayment(body.order);
                 return;
             }
             if (response.status === 422 && body.errors) {
@@ -188,7 +193,29 @@ export default function CheckoutModal({ items, onClose, onRegistered, onFix }) {
         } catch {
             // The key is kept: retrying cannot create a second order.
             setFormError('No pudimos conectar con el servidor. Comprueba tu conexión e inténtalo nuevamente.');
-        } finally { sending.current = false; setBusy(false); }
+        } finally { sending.current = false; if (!leaving.current) setBusy(false); }
+    }
+
+    // Asks the server for the signed Wompi checkout URL (reference + email prove the order is theirs) and leaves for it.
+    async function startPayment(placed) {
+        const reply = await fetch('/api/payments/wompi/attempt', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ reference: placed.reference, customer_email: data.customer_email.trim() }),
+        });
+        const result = await reply.json().catch(() => ({}));
+        if (reply.ok && result.checkout_url) {
+            leaving.current = true; // keep the button busy while the browser goes to Wompi
+            window.location.assign(result.checkout_url);
+            return;
+        }
+        if (reply.status === 409 && result.paid) { // replay of an order that was already paid
+            clearCheckout(); clearPendingOrder(); setOrder(placed); setStep(4); onRegistered();
+            return;
+        }
+        // `code` marks a configuration problem with its own explanation (a local APP_URL, which Wompi's firewall blocks): show it as is.
+        setFormError(result.code ? result.message : reply.status === 503 ? 'Los pagos en línea no están disponibles en este momento.'
+            : reply.status === 429 ? 'Hiciste muchos intentos seguidos. Espera un momento e inténtalo de nuevo.'
+                : 'No pudimos iniciar el pago. Tu pedido quedó registrado: pulsa «Pagar con Wompi» para intentarlo de nuevo, no se duplicará.');
     }
 
     async function copyReference() {
@@ -272,11 +299,13 @@ export default function CheckoutModal({ items, onClose, onRegistered, onFix }) {
                     </div>
                 </div>
                 {needsReview && <div className="co-notice" role="alert">{unavailable.length > 0 ? 'Algunos productos ya no están disponibles. ' : ''}{short.length > 0 ? 'Algunos productos tienen menos unidades de las que pediste. ' : ''}{changed.length > 0 ? 'Algunos precios cambiaron. ' : ''}Revisa el resumen antes de confirmar.<div className="co-btn-row"><button type="button" className="co-btn-next" onClick={acceptChanges}>Revisé los cambios{unavailable.length > 0 || short.length > 0 ? ' y ajustar mi carrito' : ''}</button></div></div>}
-                <p className="preview-note">Al confirmar registramos tu pedido. El pago en línea aún no está disponible: nos pondremos en contacto contigo para coordinarlo y el envío.</p>
+                {payments
+                    ? <p className="preview-note">Pagas de forma segura en Wompi (tarjeta, Nequi, PSE y más). Al pulsar «Pagar con Wompi» registramos tu pedido y tienes 30 minutos para completar el pago.</p>
+                    : <div className="co-notice" role="alert">Los pagos en línea no están disponibles en este momento.{whatsappLink('Hola, quiero hacer un pedido en Café Finca Helena') && <> Escríbenos por <a href={whatsappLink('Hola, quiero hacer un pedido en Café Finca Helena')} target="_blank" rel="noopener noreferrer">WhatsApp</a> y te ayudamos.</>}</div>}
             </div>}
             {step === 4 && order && <div className="co-done" role="status">
                 <div className="co-done-icon"><Check aria-hidden="true" /></div>
-                <h3>¡Pedido registrado!</h3>
+                <h3>¡Tu pedido ya está pagado!</h3>
                 <div className="co-ref-box">
                     <small>Tu referencia</small>
                     <strong>{order.reference}</strong>
@@ -292,9 +321,9 @@ export default function CheckoutModal({ items, onClose, onRegistered, onFix }) {
                 <div className="co-next">
                     <h4>¿Qué sigue?</h4>
                     <ol>
-                        <li>Te contactaremos al celular {formatPhone(normalizePhone(data.customer_phone))} para coordinar el pago y el envío.</li>
+                        <li>Recibimos tu pago y tu pedido ya está registrado.</li>
                         <li>Guarda tu referencia para cualquier consulta.</li>
-                        <li>Tu pedido queda pendiente: todavía no se ha realizado ningún pago.</li>
+                        <li>Te contactaremos al celular {formatPhone(normalizePhone(data.customer_phone))} para coordinar el envío.</li>
                     </ol>
                 </div>
                 <div className="co-btn-row"><button className="co-btn-next" onClick={onClose}>Seguir comprando</button></div>
@@ -303,7 +332,7 @@ export default function CheckoutModal({ items, onClose, onRegistered, onFix }) {
             {step < 4 && <div className="co-btn-row">
                     {step > 1 && <button className="co-btn-back" onClick={() => { setErrors({}); setStep(step - 1); }} disabled={busy}><ArrowLeft className="ui-icon" aria-hidden="true" /> Volver</button>}
                     {step < 3 ? <button className="co-btn-next" onClick={next}>Continuar <ArrowRight className="ui-icon" aria-hidden="true" /></button>
-                        : <button className="co-btn-next" onClick={submit} disabled={!canConfirm}>{busy ? 'Registrando…' : 'Confirmar pedido'}</button>}
+                        : payments && <button className="co-btn-next" onClick={submit} disabled={!canConfirm}>{busy ? 'Preparando el pago…' : 'Pagar con Wompi'}</button>}
             </div>}
         </div>
     </div></div></div>, document.body);

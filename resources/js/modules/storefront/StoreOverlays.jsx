@@ -6,9 +6,12 @@ import { untilText } from '../catalog/variant';
 import { money } from '../catalog/ProductCard';
 import content from '../content/referenceContent.json';
 import CheckoutModal from './CheckoutModal';
+import PendingOrderNotice from './PendingOrderNotice';
 
 export default function StoreOverlays() {
-    const { items, changeQuantity, cartNotice, dismissCartNotice, drawer, setDrawer, checkout, setCheckout, policy, setPolicy } = useStorefront();
+    const { items, changeQuantity, cartNotice, dismissCartNotice, drawer, setDrawer, checkout, setCheckout, policy, setPolicy, pendingOrder } = useStorefront();
+    const [nudge, setNudge] = useState(0);
+    const blocked = pendingOrder?.state === 'pending' || pendingOrder?.state === 'checking'; // one pending order at a time: no second order
     const policyIcons = { envio: Truck, reembolso: RotateCcw, privacidad: ScrollText, terminos: FileText };
     const PolicyIcon = policyIcons[policy];
     useEffect(() => { const close = e => {if (e.key === 'Escape') {setDrawer(false);setCheckout(false);setPolicy(null);}}; window.addEventListener('keydown',close); return () => window.removeEventListener('keydown',close); }, [setDrawer,setCheckout,setPolicy]);
@@ -38,8 +41,9 @@ export default function StoreOverlays() {
                     </div>;
                 })}
             </div>
-            <div className="drawer-foot"><div className="drawer-total"><span>Subtotal</span><span>{money(total)}</span></div>{savings > 0 && <div className="drawer-savings"><span>Ahorras</span><span>{money(savings)}</span></div>}<button className="checkout-btn" disabled={!items.length} onClick={() => {setDrawer(false);setCheckout(true);}}><ShoppingCart className="ui-icon" aria-hidden="true" /> Continuar con el pedido</button><div className="checkout-note">Tu pedido queda registrado y te contactamos para coordinar el pago.</div><p className="preview-note">El pago en línea aún no está disponible.</p></div>
+            <div className="drawer-foot"><div className="drawer-total"><span>Subtotal</span><span>{money(total)}</span></div>{savings > 0 && <div className="drawer-savings"><span>Ahorras</span><span>{money(savings)}</span></div>}<button className="checkout-btn" disabled={!items.length || pendingOrder?.state === 'checking'} onClick={() => {setDrawer(false); if (blocked) { window.scrollTo({ top: 0, behavior: 'smooth' }); setNudge(value => value + 1); } else setCheckout(true);}}><ShoppingCart className="ui-icon" aria-hidden="true" /> Continuar con el pedido</button><div className="checkout-note">Pagas de forma segura en Wompi: tarjeta, Nequi, PSE y más.</div><p className="preview-note">Tienes 30 minutos para completar el pago.</p></div>
         </aside>
+        <PendingOrderNotice nudge={nudge} />
         {cartNotice.length > 0 && <div className="stock-notice" role="alert"><div><strong>Actualizamos tu carrito</strong><ul>{cartNotice.map(message => <li key={message}>{message}</li>)}</ul></div><button type="button" onClick={dismissCartNotice}>Entendido</button></div>}
         {checkout && <CheckoutModal items={items} onClose={() => setCheckout(false)} onRegistered={() => items.forEach(item => changeQuantity(item.id, 0))} onFix={fixes => fixes.forEach(fix => changeQuantity(fix.id, fix.quantity))} />}
     </>;

@@ -4,6 +4,7 @@ import { StorefrontProvider } from './context/StorefrontContext';
 import StorefrontLayout from './layouts/StorefrontLayout';
 import HomePage from './modules/storefront/HomePage';
 import ProductDetailPage from './modules/catalog/ProductDetailPage';
+import PaymentResultPage from './modules/storefront/PaymentResultPage';
 import { BlogPage, ArticlePage, OriginPage } from './modules/content/ContentPages';
 import AdminPage from './modules/admin/AdminPage';
 import { isAdminPath, storefrontRoutes } from './routes';
@@ -13,6 +14,7 @@ const PAGES = {
     home: <HomePage />,
     promotions: <HomePage promotions />,
     product: <ProductDetailPage />,
+    'payment-result': <PaymentResultPage />,
     origin: <OriginPage />,
     blog: <BlogPage />,
     article: <ArticlePage />,

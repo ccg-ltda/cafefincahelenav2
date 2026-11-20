@@ -13,7 +13,7 @@ const FOCUSABLE = 'a[href],button:not(:disabled),input:not(:disabled),select:not
 export async function request(url, options = {}) {
     const headers = { Accept: 'application/json', 'X-CSRF-TOKEN': csrf(), ...options.headers };
     const response = await fetch(url, { ...options, headers, credentials: 'same-origin' });
-    if (response.status === 401 || response.redirected) { window.location.replace('/admin/login'); throw new Error('Sesión expirada.'); }
+    if (response.status === 401 || response.redirected) { window.location.replace('/admin/login?expired=1'); throw new Error('Sesión expirada.'); }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
         const messages = { 403: 'No tienes permiso para realizar esta acción.', 404: 'La categoría ya no existe. Recarga la página.', 419: 'La sesión o el token de seguridad vencieron. Recarga la página e inicia sesión de nuevo si es necesario.', 422: 'Revisa los campos señalados.' };

@@ -87,6 +87,7 @@ class UserRoleTest extends TestCase
             ['get', '/admin/orders/data', 'orders.list'], ['get', '/admin/orders/999/detail', 'orders.list'], ['get', '/admin/today/data', 'today.view'],
             ['patch', '/admin/orders/999/prepare', 'orders.prepare'], ['patch', '/admin/orders/999/ready', 'orders.prepare'],
             ['patch', '/admin/orders/999/ship', 'orders.ship'], ['patch', '/admin/orders/999/reassign', 'orders.ship'], ['patch', '/admin/orders/999/deliver', 'orders.deliver'],
+            ['post', '/admin/orders/999/wompi/refresh', 'payments.refresh'], ['post', '/admin/orders/999/wompi/review', 'payments.review'], ['get', '/admin/orders/999/detail', 'orders.list'],
 
             ['get', '/admin/products/data', 'products.manage'], ['get', '/admin/products/categories/data', 'products.manage'], ['post', '/admin/products/categories', 'products.manage'],
             ['post', '/admin/products', 'products.manage'], ['put', '/admin/products/999', 'products.manage'], ['patch', '/admin/products/999/status', 'products.manage'],
@@ -240,11 +241,11 @@ class UserRoleTest extends TestCase
         app(\App\Services\PaymentService::class)->markPaid($order); // the payment, not the panel, confirms
         $this->actingAs($dispatch);
 
-        $this->patchJson("/admin/orders/{$order->id}/prepare", ['note' => 'Empacando'])->assertOk()->assertJsonPath('order.status', 'preparing');
-        $this->patchJson("/admin/orders/{$order->id}/ready")->assertOk()->assertJsonPath('order.status', 'ready');
-        $this->patchJson("/admin/orders/{$order->id}/ship", ['delivery_user_id' => $courier->id])->assertOk()->assertJsonPath('order.assigned_delivery.id', $courier->id);
+        $this->patchJson("/admin/orders/{$order->id}/prepare", ['expected_status' => $order->fresh()->status, 'note' => 'Empacando'])->assertOk()->assertJsonPath('order.status', 'preparing');
+        $this->patchJson("/admin/orders/{$order->id}/ready", ['expected_status' => $order->fresh()->status])->assertOk()->assertJsonPath('order.status', 'ready');
+        $this->patchJson("/admin/orders/{$order->id}/ship", ['expected_status' => $order->fresh()->status, 'delivery_user_id' => $courier->id])->assertOk()->assertJsonPath('order.assigned_delivery.id', $courier->id);
 
-        $this->actingAs($courier)->patchJson("/admin/orders/{$order->id}/deliver", ['note' => 'Recibió el portero'])->assertOk()->assertJsonPath('order.status', 'delivered');
+        $this->actingAs($courier)->patchJson("/admin/orders/{$order->id}/deliver", ['expected_status' => $order->fresh()->status, 'note' => 'Recibió el portero'])->assertOk()->assertJsonPath('order.status', 'delivered');
 
         $fresh = $order->fresh();
         $this->assertSame(['delivered', 'Recibió el portero'], [$fresh->status, $fresh->delivery_note]);
@@ -272,16 +273,16 @@ class UserRoleTest extends TestCase
         $order = $this->order('ready');
         $this->actingAs($dispatch);
 
-        $this->patchJson("/admin/orders/{$order->id}/ship", [])->assertStatus(422);
-        $this->patchJson("/admin/orders/{$order->id}/ship", ['delivery_user_id' => $courier->id, 'carrier' => 'Servientrega'])->assertStatus(422);
-        $this->patchJson("/admin/orders/{$order->id}/ship", ['delivery_user_id' => $this->person('dispatch')->id])->assertStatus(422); // not a delivery person
+        $this->patchJson("/admin/orders/{$order->id}/ship", ['expected_status' => $order->fresh()->status, ])->assertStatus(422);
+        $this->patchJson("/admin/orders/{$order->id}/ship", ['expected_status' => $order->fresh()->status, 'delivery_user_id' => $courier->id, 'carrier' => 'Servientrega'])->assertStatus(422);
+        $this->patchJson("/admin/orders/{$order->id}/ship", ['expected_status' => $order->fresh()->status, 'delivery_user_id' => $this->person('dispatch')->id])->assertStatus(422); // not a delivery person
         $inactive = $this->person('delivery', ['is_active' => false]);
-        $this->patchJson("/admin/orders/{$order->id}/ship", ['delivery_user_id' => $inactive->id])->assertStatus(422);
+        $this->patchJson("/admin/orders/{$order->id}/ship", ['expected_status' => $order->fresh()->status, 'delivery_user_id' => $inactive->id])->assertStatus(422);
         $this->assertSame('ready', $order->fresh()->status); // nothing changed, no history, no Historial row
         $this->assertSame(0, OrderStatusHistory::count());
         $this->assertSame(0, ActivityLog::where('module', 'orders')->count());
 
-        $this->patchJson("/admin/orders/{$order->id}/ship", ['carrier' => 'Servientrega', 'tracking_number' => 'SV123'])->assertOk();
+        $this->patchJson("/admin/orders/{$order->id}/ship", ['expected_status' => $order->fresh()->status, 'carrier' => 'Servientrega', 'tracking_number' => 'SV123'])->assertOk();
         $this->assertSame(['shipped', 'Servientrega', 'SV123', null], [$order->fresh()->status, $order->fresh()->carrier, $order->fresh()->tracking_number, $order->fresh()->assigned_delivery_user_id]);
     }
 
@@ -291,17 +292,17 @@ class UserRoleTest extends TestCase
         $order = $this->order('pending');
         $this->actingAs($dispatch);
 
-        $this->patchJson("/admin/orders/{$order->id}/ready")->assertStatus(422); // pending -> ready skips steps
-        $this->patchJson("/admin/orders/{$order->id}/deliver")->assertStatus(422);
+        $this->patchJson("/admin/orders/{$order->id}/ready", ['expected_status' => $order->fresh()->status])->assertStatus(422); // pending -> ready skips steps
+        $this->patchJson("/admin/orders/{$order->id}/deliver", ['expected_status' => $order->fresh()->status])->assertStatus(422);
         $cancelled = $this->order('cancelled');
-        $this->patchJson("/admin/orders/{$cancelled->id}/prepare")->assertStatus(422);
+        $this->patchJson("/admin/orders/{$cancelled->id}/prepare", ['expected_status' => $cancelled->fresh()->status])->assertStatus(422);
 
         config(['shop.require_payment_before_fulfillment' => true]);
-        $this->patchJson("/admin/orders/{$order->id}/prepare")->assertStatus(422)->assertJsonPath('errors.status.0', 'No se puede pasar el pedido de "Pendiente de pago" a "En preparación".');
+        $this->patchJson("/admin/orders/{$order->id}/prepare", ['expected_status' => $order->fresh()->status])->assertStatus(422)->assertJsonPath('errors.status.0', 'No se puede pasar el pedido de "Pendiente de pago" a "En preparación".');
         $confirmed = $this->order('confirmed');
-        $this->patchJson("/admin/orders/{$confirmed->id}/prepare")->assertStatus(422)->assertJsonPath('errors.status.0', 'El pedido debe estar pagado antes de pasar a "En preparación".');
+        $this->patchJson("/admin/orders/{$confirmed->id}/prepare", ['expected_status' => $confirmed->fresh()->status])->assertStatus(422)->assertJsonPath('errors.status.0', 'El pedido debe estar pagado antes de pasar a "En preparación".');
         $confirmed->forceFill(['payment_status' => 'paid'])->save();
-        $this->patchJson("/admin/orders/{$confirmed->id}/prepare")->assertOk();
+        $this->patchJson("/admin/orders/{$confirmed->id}/prepare", ['expected_status' => $confirmed->fresh()->status])->assertOk();
     }
 
     public function test_delivery_cannot_deliver_orders_assigned_to_someone_else_or_run_other_steps(): void
@@ -311,11 +312,11 @@ class UserRoleTest extends TestCase
         $mine = $this->order('shipped', ['assigned_delivery_user_id' => $courier->id]);
 
         $this->actingAs($courier);
-        $this->patchJson("/admin/orders/{$theirs->id}/deliver")->assertForbidden();
+        $this->patchJson("/admin/orders/{$theirs->id}/deliver", ['expected_status' => $theirs->fresh()->status])->assertForbidden();
         $this->assertSame('shipped', $theirs->fresh()->status);
-        $this->patchJson("/admin/orders/{$mine->id}/prepare")->assertForbidden();
-        $this->patchJson("/admin/orders/{$mine->id}/ship", ['carrier' => 'X'])->assertForbidden();
-        $this->patchJson("/admin/orders/{$mine->id}/deliver")->assertOk();
+        $this->patchJson("/admin/orders/{$mine->id}/prepare", ['expected_status' => $mine->fresh()->status])->assertForbidden();
+        $this->patchJson("/admin/orders/{$mine->id}/ship", ['expected_status' => $mine->fresh()->status, 'carrier' => 'X'])->assertForbidden();
+        $this->patchJson("/admin/orders/{$mine->id}/deliver", ['expected_status' => $mine->fresh()->status])->assertOk();
     }
 
     public function test_the_status_service_is_the_only_writer_of_orders_status(): void
@@ -389,16 +390,16 @@ class UserRoleTest extends TestCase
 
     public function test_a_temporary_password_blocks_everything_until_it_is_changed(): void
     {
-        $user = $this->person('dispatch', ['username' => 'nuevo.usuario', 'password' => 'Temporal-12345', 'must_change_password' => true]);
+        $user = $this->person('dispatch', ['username' => 'nuevo.usuario', 'password' => 'Temporal-Qx7Lm', 'must_change_password' => true]);
 
-        $this->login('nuevo.usuario', 'Temporal-12345')->assertOk()->assertJsonPath('must_change_password', true);
+        $this->login('nuevo.usuario', 'Temporal-Qx7Lm')->assertOk()->assertJsonPath('must_change_password', true);
         $this->getJson('/admin/orders/data')->assertForbidden()->assertJsonPath('must_change_password', true);
         $this->get('/admin/orders')->assertRedirect('/admin/change-password');
         $this->get('/admin/change-password')->assertOk();
         $this->getJson('/admin/session')->assertOk()->assertJsonPath('must_change_password', true);
 
         $this->postJson('/admin/password', ['password' => 'corta', 'password_confirmation' => 'corta'])->assertStatus(422);
-        $this->postJson('/admin/password', ['password' => 'Temporal-12345', 'password_confirmation' => 'Temporal-12345'])->assertStatus(422); // same as the temporary one
+        $this->postJson('/admin/password', ['password' => 'Temporal-Qx7Lm', 'password_confirmation' => 'Temporal-Qx7Lm'])->assertStatus(422); // same as the temporary one
         $this->postJson('/admin/password', ['password' => 'Nueva-clave-segura', 'password_confirmation' => 'distinta-clave'])->assertStatus(422);
         $this->postJson('/admin/password', ['password' => 'Nueva-clave-segura', 'password_confirmation' => 'Nueva-clave-segura'])->assertOk();
 
@@ -440,7 +441,7 @@ class UserRoleTest extends TestCase
 
     private function newUser(array $override = []): array
     {
-        return $override + ['name' => 'Carlos Rojas', 'username' => 'carlos.rojas', 'email' => '', 'role' => 'dispatch', 'password' => 'Temporal-12345'];
+        return $override + ['name' => 'Carlos Rojas', 'username' => 'carlos.rojas', 'email' => '', 'role' => 'dispatch', 'password' => 'Temporal-Qx7Lm'];
     }
 
     public function test_an_administrator_creates_edits_deactivates_and_resets_people_and_everything_is_logged_without_passwords(): void
@@ -452,7 +453,7 @@ class UserRoleTest extends TestCase
         $created = User::find($id);
         $this->assertNull($created->email);
         $this->assertSame($admin->id, $created->created_by);
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Temporal-12345', $created->password));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Temporal-Qx7Lm', $created->password));
         $this->assertSame('Usuario: Carlos Rojas (@carlos.rojas)', ActivityLog::where('action', 'created')->first()->subject_label);
 
         $this->putJson("/admin/users/$id", $this->newUser(['name' => 'Carlos A. Rojas']))->assertOk();
@@ -471,7 +472,7 @@ class UserRoleTest extends TestCase
 
         $this->assertSame(['created', 'updated', 'role_changed', 'deactivated', 'reactivated', 'password_reset', 'password_reset'], ActivityLog::where('module', 'users')->orderBy('id')->pluck('action')->all());
         $stored = json_encode(ActivityLog::all()->map->getAttributes());
-        foreach (['Temporal-12345', 'Temporal-nueva-99', $generated, '"password"'] as $secret) {
+        foreach (['Temporal-Qx7Lm', 'Temporal-nueva-99', $generated, '"password"'] as $secret) {
             $this->assertStringNotContainsString($secret, $stored);
         }
         $this->assertStringNotContainsString('carlos@', $stored);

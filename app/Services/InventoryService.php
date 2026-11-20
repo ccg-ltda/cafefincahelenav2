@@ -98,11 +98,11 @@ class InventoryService
      *
      * @param  array<int, int>  $quantities  variant id => units
      */
-    public function sellOrder(Order $order, array $quantities): void
+    public function sellOrder(Order $order, array $quantities, ?int $userId = null): void
     {
         ksort($quantities);
 
-        DB::transaction(function () use ($order, $quantities) {
+        DB::transaction(function () use ($order, $quantities, $userId) {
             $variants = ProductVariant::query()->whereIn('id', array_keys($quantities))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
             $short = [];
@@ -118,7 +118,7 @@ class InventoryService
             }
 
             foreach ($quantities as $id => $units) {
-                $this->adjust($id, 'venta', $units, "Venta {$order->reference}", null, $order->id);
+                $this->adjust($id, 'venta', $units, "Venta {$order->reference}", $userId, $order->id);
             }
         });
     }

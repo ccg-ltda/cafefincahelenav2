@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Role;
 use App\Models\User;
+use App\Rules\StrongPassword;
 use App\Services\UserService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -57,7 +58,7 @@ class AdminUserController extends Controller
     /** Live check of the username while the form is typed. */
     public function usernameCheck(Request $request): JsonResponse
     {
-        $data = $request->validate(['username' => ['required', 'string', 'max:40'], 'ignore' => ['sometimes', 'nullable', 'integer']]);
+        $data = $request->validate(['username' => ['required', 'string', 'max:40'], 'ignore' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:999999999999']]);
         $username = mb_strtolower(trim($data['username']));
         $valid = (bool) preg_match('/^[a-z0-9.-]{3,40}$/', $username);
         $taken = $valid && User::query()->where('username', $username)->when(! empty($data['ignore']), fn ($query) => $query->where('id', '<>', $data['ignore']))->exists();
@@ -68,7 +69,7 @@ class AdminUserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $this->validated($request, null) + $request->validate([
-            'password' => ['required', 'string', 'min:'.UserService::MIN_PASSWORD, 'max:100'],
+            'password' => ['required', 'string', 'min:'.UserService::MIN_PASSWORD, 'max:100', new StrongPassword],
         ], ['password.min' => 'La contraseña temporal debe tener al menos '.UserService::MIN_PASSWORD.' caracteres.'], ['password' => 'contraseña temporal']);
 
         $created = $this->users->create($data, $request->user());
@@ -94,7 +95,7 @@ class AdminUserController extends Controller
     /** The temporary password comes back ONCE in this response (given by the admin or generated); it is never stored in clear. */
     public function resetPassword(Request $request, User $user): JsonResponse
     {
-        $data = $request->validate(['password' => ['nullable', 'string', 'min:'.UserService::MIN_PASSWORD, 'max:100']], ['password.min' => 'La contraseña temporal debe tener al menos '.UserService::MIN_PASSWORD.' caracteres.'], ['password' => 'contraseña temporal']);
+        $data = $request->validate(['password' => ['nullable', 'string', 'min:'.UserService::MIN_PASSWORD, 'max:100', new StrongPassword]], ['password.min' => 'La contraseña temporal debe tener al menos '.UserService::MIN_PASSWORD.' caracteres.'], ['password' => 'contraseña temporal']);
         $temporary = $this->users->resetPassword($user, $request->user(), $data['password'] ?? null);
 
         return $this->respond($request, $user->fresh(), 200, ['temporary_password' => $temporary]);

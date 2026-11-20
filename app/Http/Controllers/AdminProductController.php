@@ -23,7 +23,7 @@ class AdminProductController extends Controller
     {
         $filters = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'category' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'category' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:999999999999'],
             'status' => ['sometimes', 'nullable', Rule::in(['active', 'inactive', 'low', 'out'])],
             // Old URLs: ?publication=published|unpublished means status=active|inactive.
             'publication' => ['sometimes', 'nullable', Rule::in(['published', 'unpublished'])],

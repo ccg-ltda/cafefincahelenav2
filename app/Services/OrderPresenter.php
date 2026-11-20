@@ -15,20 +15,23 @@ class OrderPresenter
     /** Same evidence the dashboard requires before it counts a payment as confirmed. */
     public const VERIFIED_PAYMENT = "EXISTS (SELECT 1 FROM payments WHERE payments.order_id = orders.id AND payments.status = 'approved' AND payments.verified_at IS NOT NULL AND payments.confirmed_at IS NOT NULL AND payments.external_transaction_id IS NOT NULL AND payments.external_transaction_id <> '' AND payments.currency = 'COP' AND payments.amount_cop = orders.total_cop)";
 
+    /** An approved payment on a cancelled order that no administrator has reviewed yet (Pedidos paints the row red). */
+    public const PAYMENT_ALERT = "EXISTS (SELECT 1 FROM payments WHERE payments.order_id = orders.id AND payments.review_required_at IS NOT NULL AND payments.reviewed_at IS NULL)";
+
     public function __construct(private readonly OrderStatusService $statuses) {}
 
     /** A row of the list. */
     public function row(Order $order, User $user): array
     {
         $row = [
-            'id' => $order->id, 'reference' => $order->reference, 'created_at' => $order->created_at?->toIso8601String(),
+            'id' => $order->id, 'reference' => $order->reference, 'channel' => $order->channel, 'created_at' => $order->created_at?->toIso8601String(),
             'customer_name' => $order->customer_name, 'customer_phone' => $order->customer_phone, 'delivery_city' => $order->delivery_city,
             'status' => $order->status, 'stage_since' => ($order->status_changed_at ?? $order->created_at)?->toIso8601String(), 'next' => $this->next($order, $user),
         ];
         if ($user->hasPermission('orders.view_financials')) {
             $row += [
                 'total_cop' => $order->total_cop, 'coupon_code' => $order->coupon_code, 'discount_cop' => $order->discount_cop,
-                'payment_status' => $order->payment_status, 'payment_verified' => (bool) ($order->payment_verified ?? false),
+                'payment_status' => $order->payment_status, 'payment_verified' => (bool) ($order->payment_verified ?? false), 'payment_alert' => (bool) ($order->payment_alert ?? false),
             ];
         }
 
@@ -60,16 +63,31 @@ class OrderPresenter
         if ($user->hasPermission('orders.view_customer_email')) {
             $detail['customer_email'] = $order->customer_email;
         }
+        if ($user->hasPermission('orders.create_manual') && $order->channel === 'manual') {
+            $open = $order->status === 'pending' && $order->payment_status === 'pending' ? app(PaymentService::class)->openAttempt($order) : null;
+            $detail['manual'] = [
+                'created_by' => $order->created_by ? User::query()->whereKey($order->created_by)->value('name') : null,
+                'payment_due_at' => $order->payment_due_at?->toIso8601String(),
+                // none: nothing to pay any more | valid: copy it | expired: a new one may be generated
+                'link' => $order->status !== 'pending' || $order->payment_status !== 'pending' ? 'none' : ($open ? 'valid' : 'expired'),
+                'link_expires_at' => $open?->checkout_expires_at?->toIso8601String(),
+            ];
+        }
         if ($financial) {
             $detail += [
                 'subtotal_cop' => $order->subtotal_cop, 'shipping_cop' => $order->shipping_cop, 'currency' => $order->currency, 'paid_at' => $order->paid_at?->toIso8601String(),
                 'payments' => $order->payments->map(fn ($payment) => [
                     'id' => $payment->id, 'provider' => $payment->provider, 'reference' => $payment->reference,
                     'external_transaction_id' => $payment->external_transaction_id, 'status' => $payment->status,
-                    'amount_cop' => $payment->amount_cop, 'currency' => $payment->currency,
+                    'amount_cop' => $payment->amount_cop, 'currency' => $payment->currency, 'payment_method_type' => $payment->payment_method_type, 'status_message' => $payment->status_message,
+                    'created_at' => $payment->created_at?->toIso8601String(), 'review_required_at' => $payment->review_required_at?->toIso8601String(), 'reviewed_at' => $payment->reviewed_at?->toIso8601String(),
                     'confirmed_at' => $payment->confirmed_at?->toIso8601String(), 'verified_at' => $payment->verified_at?->toIso8601String(),
                 ])->values(),
             ];
+        }
+
+        if ($user->hasPermission('emails.manage')) {
+            $detail['notifications'] = app(OrderNotificationService::class)->listFor($order);
         }
 
         return $detail;

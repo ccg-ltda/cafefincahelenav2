@@ -15,6 +15,15 @@ return [
     'whatsapp_number' => preg_replace('/\D/', '', (string) env('SHOP_WHATSAPP_NUMBER', '')),
 
     /*
+    | Who receives the administrator emails (new paid order, payment on a cancelled order): SHOP_ADMIN_NOTIFICATION_EMAILS,
+    | separated by commas. Invalid addresses are dropped. Empty = no administrator email is sent (a warning goes to the log).
+    */
+    'admin_notification_emails' => array_values(array_unique(array_filter(
+        array_map(fn ($email) => strtolower(trim($email)), explode(',', (string) env('SHOP_ADMIN_NOTIFICATION_EMAILS', ''))),
+        fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false,
+    ))),
+
+    /*
     | Audit trail (Historial). Fields whose NAME contains one of these words are never stored (they become "[oculto]").
     | `activity:prune` deletes only "auth" rows older than the retention days; administrative actions are kept.
     */

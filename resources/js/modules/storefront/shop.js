@@ -8,6 +8,12 @@ export function shopWhatsapp() {
     return /^[1-9][0-9]{7,14}$/.test(number) ? number : '';
 }
 
+/**
+ * Whether online payments are available. The server decides (<meta name="shop-payments">, 1 only with valid Wompi keys) and
+ * publishes a yes/no: no key of any kind reaches the browser. Without payments the checkout does not take orders.
+ */
+export const paymentsEnabled = () => document.querySelector('meta[name="shop-payments"]')?.content === '1';
+
 /** "573027880823" -> "3027880823" (the number as people write it in Colombia). */
 export const nationalNumber = number => (number.startsWith('57') && number.length === 12 ? number.slice(2) : number);
 

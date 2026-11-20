@@ -38,7 +38,43 @@ class OrderStatusService
         'shipped' => 'En camino', 'delivered' => 'Entregado', 'cancelled' => 'Cancelado',
     ];
 
-    public function __construct(private readonly ActivityLogger $activity) {}
+    public function __construct(private readonly ActivityLogger $activity, private readonly InventoryService $inventory, private readonly CouponService $coupons) {}
+
+    /**
+     * Cancels an order that is still waiting for payment (used by the expiry command and by the customer's own "cancelar pedido"; the admin button will come later; `$actorLabel` names who when there is no user: "Sistema" by default, "Cliente"). In ONE
+     * transaction: status, stock back (InventoryService, never twice), coupon released (CouponService), order_status_history,
+     * Historial (actor "Sistema" unless a person is given) and, after the commit, OrderStatusChanged. Idempotent: an already
+     * cancelled order is returned untouched. Only a `pending` order can be cancelled here: a paid or worked one never is.
+     */
+    public function cancel(Order $order, string $reason, ?User $by = null, ?string $actorLabel = null): Order
+    {
+        $reason = trim($reason);
+
+        return DB::transaction(function () use ($order, $reason, $by, $actorLabel) {
+            $locked = Order::query()->lockForUpdate()->findOrFail($order->id);
+            if ($locked->status === 'cancelled') {
+                return $locked;
+            }
+            if ($locked->status !== 'pending' || $locked->payment_status === 'paid') {
+                throw ValidationException::withMessages(['status' => ['Solo se puede cancelar un pedido que sigue pendiente de pago.']]);
+            }
+
+            $from = $locked->status;
+            $locked->status = 'cancelled';
+            $locked->status_changed_at = now();
+            $locked->save();
+
+            $this->inventory->returnOrder($locked, $by?->id);
+            $this->coupons->releaseForOrder($locked);
+
+            OrderStatusHistory::create(['order_id' => $locked->id, 'from_status' => $from, 'to_status' => 'cancelled', 'note' => $reason, 'user_id' => $by?->id]);
+            $this->activity->log('orders', 'status_changed', $locked, ['status' => [$from, 'cancelled']], ['note' => $reason], actor: $by, actorLabel: $by ? null : ($actorLabel ?? 'Sistema'));
+
+            DB::afterCommit(fn () => OrderStatusChanged::dispatch($locked, $from, 'cancelled', $by));
+
+            return $locked;
+        });
+    }
 
     /**
      * The next step of an order as the buttons show it (Hoy and Pedidos use the same one), or null. The server checks the
@@ -51,7 +87,7 @@ class OrderStatusService
         $unpaidMayStart = ! config('shop.require_payment_before_fulfillment');
 
         return match ($order->status) {
-            'pending' => $unpaidMayStart ? $this->action('prepare') : null,
+            'pending' => $unpaidMayStart && $order->channel !== 'manual' ? $this->action('prepare') : null, // a manual order waits for Wompi
             'confirmed' => $this->action('prepare'),
             'preparing' => $this->action('ready'),
             'ready' => $this->action('ship'),
@@ -180,7 +216,7 @@ class OrderStatusService
             if (! $this->allowed($from, $to)) {
                 throw ValidationException::withMessages(['status' => ['No se puede pasar el pedido de "'.(self::LABELS[$from] ?? $from).'" a "'.self::LABELS[$to].'".']]);
             }
-            if (config('shop.require_payment_before_fulfillment') && in_array($to, self::NEEDS_PAYMENT, true) && $locked->payment_status !== 'paid') {
+            if ((config('shop.require_payment_before_fulfillment') || $locked->channel === 'manual') && in_array($to, self::NEEDS_PAYMENT, true) && $locked->payment_status !== 'paid') {
                 throw ValidationException::withMessages(['status' => ['El pedido debe estar pagado antes de pasar a "'.self::LABELS[$to].'".']]);
             }
 

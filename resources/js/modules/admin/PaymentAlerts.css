@@ -1,0 +1,21 @@
+/* Approved payment on a cancelled order: red and impossible to miss until an administrator marks it reviewed. */
+.payment-alerts{display:grid;gap:10px;margin:0 0 22px}
+.payment-alert{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 14px;align-items:start;padding:14px 16px;border:2px solid #b43a2c;border-radius:12px;background:#fdeceA;color:#6b1f15}
+.payment-alert>svg{width:26px;height:26px;color:#b43a2c;margin-top:2px}
+.payment-alert p{margin:0;font-size:15px;line-height:1.45}
+.payment-alert code{font:700 13px ui-monospace,Consolas,monospace;background:rgba(180,58,44,.12);padding:2px 6px;border-radius:6px}
+.payment-alert-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px}
+.payment-alert-actions a,.payment-alert-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:10px;font:700 14px Inter,Arial,sans-serif;text-decoration:none;cursor:pointer}
+.payment-alert-actions a{border:1.5px solid #b43a2c;background:#fff;color:#8c2216}
+.payment-alert-actions button{border:0;background:#b43a2c;color:#fff}
+.payment-alert-actions button:disabled{opacity:.7;cursor:progress}
+@media(min-width:640px){.payment-alert{grid-template-columns:auto minmax(0,1fr) auto;align-items:center}.payment-alert-actions{grid-column:auto}}
+
+/* Detail of the order (section Pago). */
+.admin-payment-alert{margin:0 0 14px;padding:14px 16px;border:2px solid #b43a2c;border-radius:12px;background:#fdecea;color:#6b1f15;display:grid;gap:8px;justify-items:start}
+.admin-payment-alert strong{font-size:16px}
+.admin-payment-alert p{margin:0;font-size:14px}
+
+/* Row of Pedidos. */
+.admin-orders-alert{display:inline-block;margin:6px 0 0;padding:3px 10px;border-radius:999px;background:#b43a2c;color:#fff;font:700 12px/1.3 Inter,Arial,sans-serif;white-space:nowrap}
+tr.has-payment-alert>td{background:#fdecea}

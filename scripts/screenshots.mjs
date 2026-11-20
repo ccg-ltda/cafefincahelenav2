@@ -10,11 +10,16 @@
 //   SCREENSHOT_COUPON=HELENA10          a valid coupon code: adds the "valid coupon" capture
 //   SCREENSHOT_PLACE_ORDER=1            confirms an order to photograph step 4. It CREATES an order: only with a throwaway database.
 //   SCREENSHOT_ADMIN_EMAIL / SCREENSHOT_ADMIN_PASSWORD   an admin user of a LOCAL database: adds the /admin/coupons captures
+//   SCREENSHOT_WOMPI=1                  the Wompi captures: the "Pagar con Wompi" checkout (and without payments), /pago/resultado (approved, declined, pending) and the admin
+//                                       Pago section / alerts. Needs a throwaway database with fake WOMPI_* keys and the orders CFH-PAGADO000001 and CFH-ALERTA000001.
+//   SCREENSHOT_MANUAL_ONLY=1            only the Pedido manual captures (375 and 1440 px): empty form, customer found, products and coupon, confirmation with the link, the "Manual" pill in Pedidos and Hoy.
+//                                       Throwaway database: it creates an order. Needs SCREENSHOT_ADMIN_*, fake WOMPI_* keys, a public-looking APP_URL, a customer with phone 3001234567 and the coupon HELENA10.
 //   SCREENSHOT_HOY_ONLY=1               only Hoy (/admin/today) as admin, dispatch (carlos.rojas) and delivery (luis.mora); their password comes from SCREENSHOT_ROLE_PASSWORD
 //
 // Images go to storage/app/screenshots/<width>/ (ignored by git). Open them and look at them.
 import { chromium } from '@playwright/test';
 import { mkdirSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 
 const BASE = (process.env.SCREENSHOT_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const OUT = 'storage/app/screenshots';
@@ -34,6 +39,99 @@ const promoted = products.find(product => isBuyable(product) && product.variants
 const product = promoted || products.find(isBuyable);
 if (!product) throw new Error('No product with stock to photograph: load some stock first.');
 if (!promoted) console.warn('! No product with a current promotion: the product page is a normal one.');
+
+
+// ---- Pedido manual (SCREENSHOT_MANUAL_ONLY=1): only these captures, at 375 and 1440 px, into storage/app/screenshots/pedido-manual/<width>/.
+// Needs a throwaway database (it CREATES an order and marks it as paid to photograph Hoy) with: an admin (SCREENSHOT_ADMIN_*), fake WOMPI_* keys,
+// a public-looking APP_URL on the server, a customer with phone 3001234567 and the coupon HELENA10.
+async function manualOrderShots() {
+    if (!ADMIN.email || !isLocal) throw new Error('SCREENSHOT_MANUAL_ONLY needs SCREENSHOT_ADMIN_EMAIL/PASSWORD and a local server.');
+    const tinker = code => execFileSync('php', ['artisan', 'tinker', '--execute=' + code], { env: process.env }).toString().trim().split('\n').pop();
+    const browser = await chromium.launch();
+    rmSync(`${OUT}/pedido-manual`, { recursive: true, force: true });
+    for (const size of SIZES.filter(item => item.width !== 768)) {
+        const dir = `${OUT}/pedido-manual/${size.width}`;
+        mkdirSync(dir, { recursive: true });
+        const context = await browser.newContext({ viewport: size, locale: 'es-CO', timezoneId: 'America/Bogota' });
+        await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE }).catch(() => {});
+        const page = await context.newPage();
+        const problems = [];
+        page.on('pageerror', error => problems.push(error.message));
+        page.on('console', message => { if (/Content Security Policy|Refused to/i.test(message.text())) problems.push(message.text().slice(0, 160)); });
+        const shot = async (name, options = {}) => { await page.waitForTimeout(500); await page.screenshot({ path: `${dir}/${name}.png`, ...options }); console.log(`${size.width}px  ${name}`); };
+
+        await page.goto(`${BASE}/admin/login`, { waitUntil: 'load' });
+        await page.fill('#admin-email', ADMIN.email);
+        await page.fill('#admin-password', ADMIN.password);
+        await Promise.all([page.waitForURL(url => url.pathname !== '/admin/login', { timeout: 15000 }), page.getByRole('button', { name: /Iniciar sesión/ }).click()]);
+
+        await page.goto(`${BASE}/admin/orders/new`, { waitUntil: 'load' });
+        await page.waitForSelector('.admin-manual', { timeout: 20000 });
+        if (size.width < 768) { await page.click('.dashboard-menu-button'); await page.waitForSelector('.dashboard-sidebar.is-open'); await shot('m0-menu-pedido-manual'); await page.keyboard.press('Escape'); }
+        await shot('m1-formulario-vacio', { fullPage: true });
+
+        // An existing customer is found by phone and offered ("Usar datos de ...").
+        await page.fill('#mo-customer_phone', '300 123 4567');
+        await page.waitForSelector('.admin-manual-found', { timeout: 10000 });
+        await shot('m2-cliente-encontrado', { fullPage: true });
+        await page.getByRole('button', { name: /Usar datos de/ }).click();
+        await page.waitForTimeout(300);
+        await page.locator('.admin-manual-consents input[type=checkbox]').first().check();
+        await shot('m3-datos-cargados', { fullPage: true });
+        await page.getByRole('button', { name: /Continuar a productos/ }).click();
+
+        // Products with a coupon: the summary is the server's quote.
+        await page.waitForSelector('.admin-manual-product', { timeout: 20000 });
+        const rows = page.locator('.admin-manual-product:not(.is-out)');
+        await rows.nth(0).getByRole('button', { name: 'Agregar uno' }).click();
+        await rows.nth(0).getByRole('button', { name: 'Agregar uno' }).click();
+        if (await rows.count() > 1) await rows.nth(1).getByRole('button', { name: 'Agregar uno' }).click();
+        await page.fill('#mo-coupon', 'HELENA10');
+        await page.getByRole('button', { name: 'Aplicar' }).click();
+        await page.waitForSelector('.admin-manual-totals .is-good', { timeout: 15000 });
+        await shot('m4-productos-y-cupon', { fullPage: true });
+        await page.getByRole('button', { name: /Continuar a envío y pago/ }).click();
+
+        await page.getByLabel(/Escribir un valor/).check();
+        await page.fill('#mo-shipping_cop', '12000');
+        await page.fill('#mo-notes', 'Es un regalo: llamar antes de entregar');
+        await page.waitForTimeout(600);
+        await shot('m5-envio-y-pago', { fullPage: true });
+        await page.getByRole('button', { name: 'Guardar y generar link de pago' }).click();
+        await page.waitForSelector('.admin-manual-done', { timeout: 20000 });
+        await shot('m6-confirmacion-con-link', { fullPage: true });
+        const link = await page.inputValue('.admin-manual-link input');
+        if (!link.startsWith('https://checkout.wompi.co/p/?') || /Mar[ií]a|3001234567|Calle/i.test(decodeURIComponent(link))) problems.push('the payment link is not minimal: ' + link.slice(0, 120));
+        const reference = (await page.textContent('.admin-manual-done-ref code')).trim();
+        await page.getByRole('button', { name: /Copiar link/ }).click();
+        const copied = await page.evaluate(() => navigator.clipboard.readText()).catch(() => '');
+        if (copied !== link) problems.push('"Copiar link" did not copy the link');
+        const whatsapp = await page.getByRole('link', { name: /Enviar por WhatsApp/ }).getAttribute('href');
+        if (!/^https:\/\/wa\.me\/573\d{9}\?text=/.test(whatsapp)) problems.push('the WhatsApp link is wrong: ' + whatsapp);
+
+        // Pedidos: the pill and the channel filter; the detail with the link block.
+        await page.goto(`${BASE}/admin/orders`, { waitUntil: 'load' });
+        await page.waitForSelector('.admin-orders-table tbody tr', { timeout: 20000 });
+        await shot('m7-pedidos-pastilla-manual', { fullPage: true });
+        await page.getByLabel('Canal').selectOption('manual');
+        await page.waitForTimeout(900);
+        await shot('m8-pedidos-filtro-manual', { fullPage: true });
+        await page.locator('.admin-orders-table tbody tr').filter({ hasText: reference }).getByRole('link', { name: /Ver detalle/ }).click();
+        await page.waitForSelector('.admin-order-manual', { timeout: 20000 });
+        await shot('m9-detalle-pedido-manual-link', { fullPage: true });
+
+        // Hoy only receives it once Wompi approves (simulated with PaymentService::markPaid, as the webhook would).
+        tinker(`app(App\\Services\\PaymentService::class)->markPaid(App\\Models\\Order::where("reference","${reference}")->first());`);
+        await page.goto(`${BASE}/admin/today`, { waitUntil: 'load' });
+        await page.waitForSelector('.today-card', { timeout: 20000 });
+        await shot('m10-hoy-pastilla-manual', { fullPage: true });
+        if (!(await page.locator('.today-card .channel-pill').count())) problems.push('Hoy does not show the "Manual" pill');
+        await context.close();
+        if (problems.length) console.warn(`! ${size.width}px:`, problems.join(' | '));
+    }
+    await browser.close();
+}
+if (process.env.SCREENSHOT_MANUAL_ONLY === '1') { await manualOrderShots(); process.exit(0); }
 
 rmSync(OUT, { recursive: true, force: true });
 const browser = await chromium.launch();
@@ -347,6 +445,100 @@ for (const size of SIZES) {
             if (new URL(pg.url()).pathname !== '/admin/today') console.warn(`! ${size.width}px /admin/deliveries did not end on Hoy (${pg.url()}, ${redirect.status()})`);
         });
         if (adminErrors.length) console.warn(`! ${size.width}px admin page errors:`, adminErrors.join(' | '));
+        // ---- Wompi: checkout button, result pages, admin Pago section and alerts (SCREENSHOT_WOMPI=1, throwaway database with fake keys) ----
+        if (process.env.SCREENSHOT_WOMPI === '1') {
+            const shopContext = await browser.newContext({ viewport: size, locale: 'es-CO', timezoneId: 'America/Bogota' });
+            const sp = await shopContext.newPage();
+            const wshot = async (name, options = {}) => { await sp.waitForTimeout(500); await sp.screenshot({ path: `${dir}/${name}.png`, ...options }); console.log(`${size.width}px  ${name}`); };
+            await sp.route('https://checkout.wompi.co/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: 'Wompi (simulado)' })); // no real network
+            await sp.goto(`${BASE}/producto/${product.slug}`, { waitUntil: 'load' });
+            await sp.waitForSelector('.product-detail', { timeout: 20000 });
+            await sp.getByRole('button', { name: /^Agregar al carrito/ }).click();
+            await sp.waitForSelector('.drawer-item');
+            await sp.getByRole('button', { name: /Continuar con el pedido/ }).click();
+            await sp.fill('#co-customer_name', 'María González');
+            await sp.fill('#co-customer_email', 'maria@example.com');
+            await sp.fill('#co-customer_phone', '3001234567');
+            await sp.getByRole('button', { name: /^Continuar/ }).click();
+            await sp.selectOption('#co-delivery_department', 'Cundinamarca');
+            await sp.fill('#co-delivery_city', 'Bogotá');
+            await sp.fill('#co-delivery_address', 'Calle 45 # 12-34');
+            await sp.getByRole('button', { name: /^Continuar/ }).click();
+            await sp.waitForSelector('.co-order-total');
+            if (!(await sp.getByRole('button', { name: /Pagar con Wompi/ }).count())) console.warn(`! ${size.width}px the checkout has no "Pagar con Wompi" button`);
+            if (await sp.getByText(/pago en línea aún no está disponible/).count()) console.warn(`! ${size.width}px the old "pago en línea aún no está disponible" notice is still there`);
+            await sp.evaluate(() => document.querySelector('.co-modal')?.scrollTo(0, 99999));
+            await wshot('28-checkout-pagar-con-wompi');
+            // Without payments (the server publishes shop-payments=0): no button, a clear message and the WhatsApp link.
+            await sp.evaluate(() => { document.querySelector('meta[name="shop-payments"]').content = '0'; });
+            await sp.getByRole('button', { name: /Volver/ }).click();
+            await sp.getByRole('button', { name: /^Continuar/ }).click();
+            await sp.waitForSelector('.co-notice');
+            if (await sp.getByRole('button', { name: /Pagar con Wompi/ }).count()) console.warn(`! ${size.width}px the button is there without payments`);
+            await sp.evaluate(() => document.querySelector('.co-modal')?.scrollTo(0, 99999));
+            await wshot('28-checkout-sin-pagos');
+            await sp.evaluate(() => { document.querySelector('meta[name="shop-payments"]').content = '1'; });
+            await sp.getByRole('button', { name: /Volver/ }).click();
+            await sp.getByRole('button', { name: /^Continuar/ }).click();
+            await sp.waitForSelector('.co-order-total');
+            // The real click: creates the pending order, asks the server for the signed URL and goes to Wompi (simulated).
+            await sp.check('#co-terms_accepted');
+            await sp.check('#co-data_consent');
+            const attempt = sp.waitForResponse(reply => reply.url().endsWith('/api/payments/wompi/attempt'));
+            await sp.getByRole('button', { name: /Pagar con Wompi/ }).click();
+            const attemptReply = await attempt;
+            await sp.waitForURL(/checkout\.wompi\.co/, { timeout: 15000 });
+            const target = new URL(sp.url());
+            const have = ['public-key', 'currency', 'amount-in-cents', 'reference', 'signature:integrity', 'redirect-url', 'expiration-time', 'customer-data:email'].filter(key => !target.searchParams.get(key));
+            if (attemptReply.status() !== 200 || have.length) console.warn(`! ${size.width}px the redirect to Wompi is incomplete (status ${attemptReply.status()}, missing ${have.join(', ')})`);
+            if (/prv_test_|test_integrity_|test_events_/.test(sp.url())) console.warn(`! ${size.width}px a secret travels in the Wompi URL`);
+            else console.log(`${size.width}px  redirect to Wompi ok (${target.searchParams.get('reference')}, ${target.searchParams.get('amount-in-cents')} cents, signature ${target.searchParams.get('signature:integrity').slice(0, 8)}…)`);
+            await shopContext.close();
+
+            // /pago/resultado with the three answers of the server (the page only passes the transaction id).
+            const answer = {
+                approved: { state: 'approved', message: null, method: 'CARD', can_retry: false, order: { reference: 'CFH-PAGADO000001', total_cop: 84450, currency: 'COP', email: 'v***@example.com', items: [{ name: 'Kit Degustación 2×125 g · Molido', quantity: 2 }, { name: 'Café Premium 250 g · En grano', quantity: 1 }] } },
+                declined: { state: 'declined', message: 'Fondos insuficientes', method: 'CARD', can_retry: true, order: { reference: 'CFH-PAGADO000001', total_cop: 84450, currency: 'COP', email: 'v***@example.com', items: [{ name: 'Kit Degustación 2×125 g · Molido', quantity: 2 }] } },
+                pending: { state: 'pending', message: null, method: 'PSE', can_retry: false, order: { reference: 'CFH-PAGADO000001', total_cop: 84450, currency: 'COP', email: 'v***@example.com', items: [{ name: 'Kit Degustación 2×125 g · Molido', quantity: 2 }] } },
+            };
+            for (const [state, body] of Object.entries(answer)) {
+                const rc = await browser.newContext({ viewport: size, locale: 'es-CO', timezoneId: 'America/Bogota' });
+                const rp = await rc.newPage();
+                // The cart holds more units than the stock now has (the order already took them): the bug showed "Actualizamos tu carrito" on an approved payment.
+                const seeded = product.variants.find(variant => variant.in_stock);
+                await rp.addInitScript(line => window.localStorage.setItem('cfh-cart', JSON.stringify([line])), { id: seeded.id, quantity: (seeded.available_quantity ?? 1) + 2 });
+                await rp.route('**/api/payments/wompi/result*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) }));
+                await rp.goto(`${BASE}/pago/resultado?id=01-1531231271-12345&status=APPROVED`, { waitUntil: 'load' });
+                await rp.waitForSelector('.pay-card.is-' + state, { timeout: 20000 });
+                await rp.waitForTimeout(1500);
+                const notice = await rp.locator('.stock-notice').count();
+                if (state === 'approved' && (notice || await rp.evaluate(() => window.localStorage.getItem('cfh-cart') !== '[]'))) console.warn(`! ${size.width}px approved payment: cart notice shown or cart not emptied`);
+                if (state === 'declined' && !notice) console.warn(`! ${size.width}px declined payment: expected the stock notice`);
+                if (state === 'pending' && notice) console.warn(`! ${size.width}px pending payment: no notice expected`);
+                await rp.screenshot({ path: `${dir}/29-pago-${state}.png`, fullPage: true });
+                console.log(`${size.width}px  29-pago-${state}`);
+                await rc.close();
+            }
+
+            // Admin: the alert in Hoy and in Pedidos, the Pago section with its attempts, the alert in the order.
+            await adminGoto(`${BASE}/admin/today`);
+            await adminPage.waitForSelector('.payment-alert', { timeout: 20000 });
+            await adminShot('30-hoy-alerta-pago-cancelado');
+            await adminGoto(`${BASE}/admin/orders`);
+            await adminPage.waitForFunction(() => !document.body.innerText.includes('Cargando pedidos'), null, { timeout: 20000 });
+            await adminPage.waitForSelector('.admin-orders-alert', { timeout: 20000 });
+            await adminShot('30-pedidos-pastilla-roja', { fullPage: true });
+            await adminGoto(`${BASE}/admin/orders?search=CFH-PAGADO000001`);
+            await adminPage.getByRole('link', { name: /Ver detalle del pedido CFH-PAGADO000001/ }).click();
+            await adminPage.waitForSelector('.admin-order-payments', { timeout: 20000 });
+            await adminPage.locator('.admin-order-payments').scrollIntoViewIfNeeded();
+            await adminShot('30-pedido-pago-intentos');
+            await adminGoto(`${BASE}/admin/orders?search=CFH-ALERTA000001`);
+            await adminPage.getByRole('link', { name: /Ver detalle del pedido CFH-ALERTA000001/ }).click();
+            await adminPage.waitForSelector('.admin-payment-alert', { timeout: 20000 });
+            await adminPage.locator('.admin-order-payments').scrollIntoViewIfNeeded();
+            await adminShot('30-pedido-alerta-detalle');
+        }
         await admin.close();
     }
 }

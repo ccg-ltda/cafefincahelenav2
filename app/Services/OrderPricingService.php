@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\CouponException;
 use App\Models\ProductVariant;
 use Illuminate\Validation\ValidationException;
 
@@ -26,9 +27,9 @@ class OrderPricingService
      * }
      *
      * With a coupon code the coupon is validated against the priced lines (CouponException when it does not apply);
-     * `$lockCoupon` is for the order transaction (row lock on the coupon).
+     * `$lockCoupon` is for the order transaction (row lock on the coupon). `$shippingOverride` is only for manual orders.
      */
-    public function price(array $items, ?string $couponCode = null, ?string $email = null, bool $lockCoupon = false): array
+    public function price(array $items, ?string $couponCode = null, ?string $email = null, bool $lockCoupon = false, ?int $shippingOverride = null): array
     {
         // Merge repeated lines of the same variant.
         $quantities = [];
@@ -72,7 +73,8 @@ class OrderPricingService
             ];
         }
 
-        $shipping = $this->shipping($subtotal);
+        // A manual order may carry the shipping the administrator agreed with the customer (integer COP >= 0); the storefront never passes one.
+        $shipping = $shippingOverride !== null ? ['amount_cop' => max(0, $shippingOverride), 'pending' => false] : $this->shipping($subtotal);
         $discount = 0;
         $coupon = null;
         if (filled($couponCode)) {
@@ -92,6 +94,41 @@ class OrderPricingService
             'total_cop' => $subtotal + $shipping['amount_cop'] - $discount,
             'currency' => 'COP',
             'coupon' => $coupon,
+        ];
+    }
+
+    /**
+     * The summary shown before confirming (storefront and manual order). A coupon that does not apply does not break it: the summary
+     * comes back without the coupon plus `coupon_error`. Read-only.
+     *
+     * @return array<string, mixed>
+     */
+    public function quote(array $items, ?string $couponCode = null, ?string $email = null, ?int $shippingOverride = null): array
+    {
+        $couponError = null;
+        try {
+            $priced = $this->price($items, $couponCode, $email, shippingOverride: $shippingOverride);
+        } catch (CouponException $error) {
+            $couponError = ['message' => $error->getMessage(), 'reason' => $error->reason];
+            $priced = $this->price($items, shippingOverride: $shippingOverride);
+        }
+
+        return [
+            'items' => array_map(fn (array $line) => [
+                'variant_id' => $line['product_variant_id'], 'sku' => $line['sku'], 'name' => $line['name'],
+                'quantity' => $line['quantity'], 'unit_price_cop' => $line['unit_price_cop'], 'original_unit_price_cop' => $line['original_unit_price_cop'], 'subtotal_cop' => $line['subtotal_cop'],
+                'available_quantity' => $line['available_quantity'], 'insufficient' => $line['quantity'] > $line['available_quantity'],
+            ], $priced['lines']),
+            'unavailable' => $priced['unavailable'],
+            'subtotal_cop' => $priced['subtotal_cop'],
+            'savings_cop' => $priced['savings_cop'],
+            'shipping_cop' => $priced['shipping_cop'],
+            'shipping_pending' => $priced['shipping_pending'],
+            'discount_cop' => $priced['discount_cop'],
+            'total_cop' => $priced['total_cop'],
+            'currency' => $priced['currency'],
+            'coupon' => $priced['coupon'],
+            'coupon_error' => $couponError,
         ];
     }
 

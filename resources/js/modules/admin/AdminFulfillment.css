@@ -24,18 +24,48 @@
 .admin-confirm-body .admin-categories-field :is(input,select,textarea){width:100%;min-height:44px;padding:0 12px;border:1px solid #e4ddd2;border-radius:8px;background:#fff;color:#3e352e;font:400 14px Inter,Arial,sans-serif}
 .admin-confirm-body .admin-categories-field textarea{padding:10px 12px;min-height:0;resize:vertical}
 
-/* Printable dispatch sheet: invisible on screen */
+/* Printable dispatch sheet: invisible on screen. It lives in <body> next to #root; printing hides everything else and prints only the sheet. */
 .dispatch-sheet{display:none}
+@page{size:auto;margin:0}
 @media print{
-    body *{visibility:hidden}
-    .dispatch-sheet,.dispatch-sheet *{visibility:visible}
-    .dispatch-sheet{display:block;position:absolute;left:0;top:0;width:100%;padding:24px;color:#000;font:14px/1.5 Arial,sans-serif;background:#fff}
-    .dispatch-sheet h1{margin:0 0 4px;font-size:22px}
-    .dispatch-sheet h2{margin:18px 0 6px;font-size:15px;border-bottom:1px solid #000}
-    .dispatch-sheet p{margin:3px 0}
-    .dispatch-sheet table{width:100%;border-collapse:collapse;margin-top:6px}
-    .dispatch-sheet th,.dispatch-sheet td{padding:6px 8px;border:1px solid #000;text-align:left}
-    .dispatch-sheet-box{width:28px}
+    html,body{margin:0;padding:0;background:#fff}
+    body>*:not(.dispatch-sheet){display:none!important}
+    .dispatch-sheet{display:block;color:#222;font:11pt/1.4 Arial,Helvetica,sans-serif;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .ds-frame{width:100%;border-collapse:collapse}
+    .ds-frame>thead{display:table-header-group}
+    .ds-frame>tfoot{display:table-footer-group}
+    .ds-frame>tbody>tr>td,.ds-frame>thead td,.ds-frame>tfoot td{padding:0}
+    .ds-margin{height:12mm}
+    .ds-page{padding:0 16mm!important}
+    .ds-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1.5px solid #2d5a27}
+    .ds-head img{width:16mm;height:16mm;object-fit:contain}
+    .ds-brand{flex:1;display:flex;flex-direction:column}
+    .ds-brand strong{font:700 22pt/1.1 Georgia,'Times New Roman',serif;color:#3b1f0e}
+    .ds-brand span{font-size:9.5pt;color:#555}
+    .ds-doc{text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+    .ds-doc span{font-size:9pt;letter-spacing:.08em;text-transform:uppercase;color:#2d5a27;font-weight:700}
+    .ds-doc b{font:700 15pt/1.2 'Courier New',Courier,monospace;color:#111}
+    .ds-doc small{font-size:9.5pt;color:#555}
+    .dispatch-sheet h2{margin:0 0 4px;font:700 9pt/1.2 Arial,Helvetica,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#2d5a27}
+    .dispatch-sheet p{margin:0}
+    .ds-to{margin-top:14px;padding-bottom:10px;font-size:13pt;line-height:1.35;break-inside:avoid}
+    .ds-name{font:700 17pt/1.3 Georgia,'Times New Roman',serif;color:#000}
+    .ds-address{font-weight:600}
+    .ds-notes{margin-top:4px;padding:8px 12px;border:1px solid #c9b79c;border-radius:6px;break-inside:avoid}
+    .ds-notes p{white-space:pre-wrap}
+    .dispatch-sheet section:not(.ds-to):not(.ds-notes){margin-top:14px}
+    .ds-items{width:100%;border-collapse:collapse}
+    .ds-items thead{display:table-header-group}
+    .ds-items tr{break-inside:avoid}
+    .ds-items th{padding:4px 6px;text-align:left;font-size:8.5pt;text-transform:uppercase;letter-spacing:.06em;color:#3b1f0e;border-bottom:1.5px solid #3b1f0e}
+    .ds-items td{padding:6px;border-bottom:1px solid #ddd;font-size:11.5pt}
+    .ds-check{width:9mm}
+    .ds-box{display:inline-block;width:4.5mm;height:4.5mm;border:1.2px solid #333;border-radius:1px;vertical-align:middle}
+    .ds-qty{width:14mm;text-align:center!important;font-weight:700}
+    .ds-sku{width:28mm;text-align:right!important;font:9pt 'Courier New',Courier,monospace;color:#555}
+    .ds-ship{margin-top:12px;padding:6px 0;border-top:1px solid #3b1f0e;border-bottom:1px solid #3b1f0e;font-weight:700;break-inside:avoid}
+    .ds-foot{margin-top:18px;break-inside:avoid}
+    .ds-thanks{font:italic 700 14pt/1.35 Georgia,'Times New Roman',serif;color:#3b1f0e;text-align:center}
+    .ds-help{margin-top:4px!important;text-align:center;font-size:9.5pt;color:#444}
+    .ds-internal{margin-top:16px!important;padding-top:7px;border-top:1px dashed #888;font-size:8pt;color:#666}
 }
-
-

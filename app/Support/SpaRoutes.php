@@ -81,7 +81,7 @@ final class SpaRoutes
             return $article ? ['title' => $article['title'].' | '.self::site(), 'description' => $article['description']] : null;
         }
 
-        return isset($route['title']) ? ['title' => $route['title'], 'description' => $route['description'] ?? null] : [];
+        return isset($route['title']) ? ['title' => $route['title'], 'description' => $route['description'] ?? null] + (empty($route['noindex']) ? [] : ['noindex' => true]) : [];
     }
 
     public static function notFoundSeo(): array

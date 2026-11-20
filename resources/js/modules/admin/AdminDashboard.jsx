@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CalendarCheck, UserCog, BadgePercent, BarChart3, CircleDollarSign, ClipboardList, Clock3, CreditCard, History, LayoutDashboard, LogOut, MapPin, Menu, MessageCircle, Package, ShoppingBag, Ticket, UserRound, Users, X } from 'lucide-react';
+import { CalendarCheck, UserCog, BadgePercent, BarChart3, CircleDollarSign, ClipboardList, Clock3, CreditCard, History, LayoutDashboard, LogOut, MapPin, Menu, MessageCircle, Package, Plus, ShoppingBag, Ticket, UserRound, Users, X } from 'lucide-react';
 import './AdminDashboard.css';
 import AdminProducts from './AdminProducts';
 import AdminCategories from './AdminCategories';
@@ -11,8 +11,10 @@ import AdminActivity from './AdminActivity';
 import AdminOrders from './AdminOrders';
 import AdminUsers from './AdminUsers';
 import AdminToday from './AdminToday';
+import AdminManualOrder from './AdminManualOrder';
 import { setOrderStatuses } from './orderStatuses';
 import NoAccess from './NoAccess';
+import PaymentAlerts from './PaymentAlerts';
 import { adminPagePermission } from '../../routes';
 import { AdminToastProvider } from './AdminToast';
 import StatusBadge, { statusLabel } from './StatusBadge';
@@ -20,6 +22,7 @@ import StatusBadge, { statusLabel } from './StatusBadge';
 // Menu entries: each one shows only to people whose role has its permission (the server enforces the same list).
 const navigation = [
     { label: 'Hoy', icon: CalendarCheck, href: '/admin/today', permission: 'today.view' },
+    { label: 'Pedido manual', icon: Plus, href: '/admin/orders/new', permission: 'orders.create_manual', exact: true },
     { label: 'Dashboard', icon: LayoutDashboard, href: '/admin', permission: 'dashboard.view', exact: true },
     { label: 'Pedidos', icon: ShoppingBag, href: '/admin/orders', permission: 'orders.list' },
     { label: 'Clientes', icon: Users, href: '/admin/customers', permission: 'customers.view' },
@@ -68,6 +71,7 @@ export default function AdminDashboard({ session, message, pending, logout }) {
     const isCustomers = /^\/admin\/customers(\/\d+)?$/.test(window.location.pathname);
     const isWhatsApp = /^\/admin\/whatsapp(\/\d+)?$/.test(window.location.pathname);
     const isActivity = /^\/admin\/activity(\/\d+)?$/.test(window.location.pathname);
+    const isManualOrder = window.location.pathname === '/admin/orders/new';
     const isOrders = window.location.pathname === '/admin/orders' || /^\/admin\/orders\/\d+$/.test(window.location.pathname);
     const [period, setPeriod] = useState(30);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -83,7 +87,7 @@ export default function AdminDashboard({ session, message, pending, logout }) {
         setSummary(null);
         fetch(`/admin/dashboard/summary?days=${period}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: controller.signal })
             .then(async response => {
-                if (response.status === 401 || response.redirected) { window.location.replace('/admin/login'); return null; }
+                if (response.status === 401 || response.redirected) { window.location.replace('/admin/login?expired=1'); return null; }
                 if (!response.ok) throw new Error('summary');
                 return response.json();
             }).then(data => { if (data) { setSummary(data); setLoadState('success'); } })
@@ -115,7 +119,7 @@ export default function AdminDashboard({ session, message, pending, logout }) {
                 <nav aria-label="Navegación administrativa">
                     {navigation.filter(item => can(item.permission)).map(({ label, icon: Icon, href, exact }) => {
                         const path = window.location.pathname;
-                        const active = exact ? path === href : path === href || path.startsWith(`${href}/`);
+                        const active = exact ? path === href : (path === href || path.startsWith(`${href}/`)) && !(href === '/admin/orders' && path === '/admin/orders/new');
                         return <a key={label} className={`dashboard-nav-item${active ? ' is-active' : ''}`} href={href} aria-current={active ? 'page' : undefined} onClick={() => setMenuOpen(false)}><Icon aria-hidden="true" /><span>{label}</span></a>;
                     })}
                 </nav>
@@ -124,8 +128,9 @@ export default function AdminDashboard({ session, message, pending, logout }) {
         </aside>
         <main className="dashboard-main">
             <div className="dashboard-content">
-                {!session ? <p className="dashboard-data-note" role="status">Cargando…</p> : !allowed ? <NoAccess home={session.home} /> : isUsers ? <AdminUsers me={session} /> : isToday ? <AdminToday session={session} /> : isActivity ? <AdminActivity /> : isWhatsApp ? <AdminWhatsApp /> : isCustomers ? <AdminCustomers /> : isCoupons ? <AdminCoupons /> : isPromotions ? <AdminPromotions /> : isOrders ? <AdminOrders session={session} /> : isCategories ? <AdminCategories /> : isProducts ? <AdminProducts /> : <>
+                {!session ? <p className="dashboard-data-note" role="status">Cargando…</p> : !allowed ? <NoAccess home={session.home} /> : isUsers ? <AdminUsers me={session} /> : isToday ? <AdminToday session={session} /> : isManualOrder ? <AdminManualOrder /> : isActivity ? <AdminActivity /> : isWhatsApp ? <AdminWhatsApp /> : isCustomers ? <AdminCustomers /> : isCoupons ? <AdminCoupons /> : isPromotions ? <AdminPromotions /> : isOrders ? <AdminOrders session={session} /> : isCategories ? <AdminCategories /> : isProducts ? <AdminProducts /> : <>
                 <header className="dashboard-heading"><div><span className="dashboard-eyebrow">Vista general</span><h1>Dashboard</h1><p>Indicadores de los últimos {period} días</p></div><div className="dashboard-period"><span id="dashboard-period-label">Período</span><div role="group" aria-labelledby="dashboard-period-label">{[7, 30, 90].map(days => <button key={days} type="button" aria-pressed={period === days} onClick={() => setPeriod(days)}>{days} días</button>)}</div></div></header>
+                <PaymentAlerts alerts={summary?.payment_alerts} onReviewed={orderId => setSummary(current => ({ ...current, payment_alerts: current.payment_alerts.filter(alert => alert.order_id !== orderId) }))} />
                 <p className="dashboard-data-note" role="status">{loadState === 'loading' ? 'Cargando indicadores…' : loadState === 'error' ? <>No se pudieron cargar los indicadores. <button type="button" className="dashboard-retry" onClick={() => setRetry(value => value + 1)}>Reintentar</button></> : 'Ventas de pagos aprobados y verificados · COP'}</p>
                 <section className="dashboard-kpis" aria-label="Indicadores principales">{indicators.map(({ label, icon: Icon, key, money: isMoney }) => <article className="dashboard-card dashboard-kpi" key={label}><div className="dashboard-kpi-heading"><h2>{label}</h2><span><Icon aria-hidden="true" /></span></div><p>{loadState === 'success' ? (isMoney ? money(summary.metrics[key]) : number(summary.metrics[key])) : loadState === 'loading' ? 'Cargando…' : 'No disponible'}</p></article>)}</section>
                 <div className="dashboard-charts">

@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Rules\StrongPassword;
 use App\Services\ActivityLogger;
+use App\Services\LoginThrottle;
 use App\Services\OrderStatusService;
 use App\Services\UserService;
 use App\Support\ActivityRedactor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -17,7 +20,7 @@ use Illuminate\Validation\ValidationException;
 
 class AdminSessionController extends Controller
 {
-    public function __construct(private readonly ActivityLogger $activity, private readonly UserService $users) {}
+    public function __construct(private readonly ActivityLogger $activity, private readonly UserService $users, private readonly LoginThrottle $throttle) {}
 
     /** Sign in with username (or email, for whoever has one) and password. Every failure answers the same generic message. */
     public function store(Request $request): JsonResponse
@@ -30,23 +33,29 @@ class AdminSessionController extends Controller
         $login = Str::lower(trim((string) ($input['login'] ?? $input['email'] ?? '')));
         $password = $input['password'];
 
-        $key = 'admin-login:'.$login.'|'.$request->ip();
+        // Two independent limits: per ACCOUNT (progressive lock, whatever the IP) and per IP (generous, so one address cannot lock out a whole team).
         $ipKey = 'admin-login-ip:'.$request->ip();
-        if (RateLimiter::tooManyAttempts($key, 5) || RateLimiter::tooManyAttempts($ipKey, 20)) {
-            return response()->json(['message' => 'Demasiados intentos. Inténtalo de nuevo más tarde.'], 429);
+        $locked = $this->throttle->lockedFor($login);
+        if ($locked > 0 || RateLimiter::tooManyAttempts($ipKey, (int) config('security.login.ip_attempts'))) {
+            return response()->json(['message' => 'Demasiados intentos. Inténtalo de nuevo más tarde.'], 429)
+                ->header('Retry-After', (string) max($locked, RateLimiter::availableIn($ipKey), 1));
         }
 
         $user = User::query()->when(str_contains($login, '@'), fn ($query) => $query->whereRaw('lower(email) = ?', [$login]), fn ($query) => $query->where('username', $login))->first();
-        $valid = $user && Hash::check($password, $user->password);
+        // Always one password check, also when the user does not exist (against a dummy hash): the time taken says nothing about it.
+        $valid = Hash::check($password, $user?->password ?? $this->dummyHash()) && $user;
 
         if (! $valid || ! $user->is_active) {
-            RateLimiter::hit($key, 60);
-            RateLimiter::hit($ipKey, 60);
+            RateLimiter::hit($ipKey, (int) config('security.login.ip_window'));
             $this->recordFailure($login, $user && ! $user->is_active ? 'usuario desactivado' : null);
+            $failure = $this->throttle->recordFailure($login);
+            if ($failure['locked'] > 0 && $user) {
+                $this->recordLock($login, $failure['attempts'], $failure['locked']);
+            }
             throw ValidationException::withMessages(['login' => 'Las credenciales no son válidas.']);
         }
 
-        RateLimiter::clear($key);
+        $this->throttle->clear($login);
         Auth::login($user);
         $request->session()->regenerate();
         $request->session()->put('staff_version', (int) $user->session_version);
@@ -72,7 +81,7 @@ class AdminSessionController extends Controller
     public function changePassword(Request $request): JsonResponse
     {
         $user = $request->user();
-        $data = $request->validate(['password' => ['required', 'string', 'min:'.UserService::MIN_PASSWORD, 'max:100', 'confirmed']], [
+        $data = $request->validate(['password' => ['required', 'string', 'min:'.UserService::MIN_PASSWORD, 'max:100', 'confirmed', new StrongPassword]], [
             'password.min' => 'La contraseña debe tener al menos '.UserService::MIN_PASSWORD.' caracteres.', 'password.confirmed' => 'Las contraseñas no coinciden.',
         ], ['password' => 'contraseña']);
 
@@ -95,6 +104,21 @@ class AdminSessionController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json(['authenticated' => false]);
+    }
+
+    /** Hash of a random password, made once with the current cost: what an unknown user is "checked" against. */
+    private function dummyHash(): string
+    {
+        return Cache::rememberForever('admin-login-dummy-hash', fn () => Hash::make(Str::random(40)));
+    }
+
+    /** Historial row when a REAL account gets locked (never the password; the typed name masked like a failed attempt). */
+    private function recordLock(string $login, int $attempts, int $seconds): void
+    {
+        $login = mb_substr($login, 0, 100);
+        $masked = str_contains($login, '@') ? (ActivityRedactor::maskEmail($login) ?? '[valor no válido]') : (preg_match('/^[a-z0-9.-]{3,40}$/', $login) ? mb_substr($login, 0, 1).'***' : '[valor no válido]');
+        $minutes = (int) ceil($seconds / 60);
+        $this->activity->log('auth', 'account_locked', null, [], ['login' => $masked, 'attempts' => $attempts, 'minutes' => $minutes], "Cuenta bloqueada tras {$attempts} intentos fallidos ({$minutes} min)", null, $masked);
     }
 
     /** Failed sign-in: what was typed, masked (an email shows `a***@dominio.com`, a username `a***`); never the password. */

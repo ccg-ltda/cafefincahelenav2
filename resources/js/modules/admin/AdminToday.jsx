@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { LoaderCircle, MapPin, MessageCircle, Phone, RefreshCw } from 'lucide-react';
 import './AdminToday.css';
 import AdminConfirmDialog from './AdminConfirmDialog';
-import StatusBadge from './StatusBadge';
+import PaymentAlerts from './PaymentAlerts';
+import StatusBadge, { ChannelPill } from './StatusBadge';
 import { request, timeAgoText, titleCase, whatsappChatUrl } from './adminShared';
 import { useAdminToast } from './AdminToast';
 import { ShipFields, runStep, shipPayload, stepError, useShip } from './orderActions';
@@ -41,7 +42,7 @@ function OrderCard({ order, section, busy, phase, onStep }) {
     const open = event => { if (!event.target.closest('a,button')) window.location.assign(`/admin/orders/${order.id}`); };
     return <article className={`today-card${phase ? ` is-${phase}` : ''}`} data-section={section} onClick={open}>
         <div className="today-card-top">
-            <code className="today-ref">{order.reference}</code>
+            <span><code className="today-ref">{order.reference}</code><ChannelPill channel={order.channel} /></span>
             <span className={`today-age ${urgency(order.stage_since)}`}>{timeAgoText(order.stage_since)}</span>
         </div>
         {section === 'new' && <StatusBadge value={`order_${order.status}`} />}
@@ -174,6 +175,7 @@ export default function AdminToday({ session }) {
         {state === 'error' && <p className="today-message" role="alert">No se pudo cargar. <button type="button" onClick={load}>Reintentar</button></p>}
 
         {state === 'success' && <>
+            <PaymentAlerts alerts={data.payment_alerts} onReviewed={orderId => setData(current => ({ ...current, payment_alerts: current.payment_alerts.filter(alert => alert.order_id !== orderId) }))} />
             <div className={`today-counters${keys.length === 1 ? ' is-single' : ''}`}>
                 {keys.map(key => <button key={key} type="button" className={`today-counter is-${key}`} onClick={() => scrollTo(key)}>
                     <span>{SECTIONS[key].title}</span><strong>{data.counts[key]}</strong></button>)}

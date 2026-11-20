@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="shop-whatsapp" content="{{ config('shop.whatsapp_number') }}">
+        <meta name="shop-payments" content="{{ app(\App\Services\WompiService::class)->enabled() ? '1' : '0' }}">
         <title>{{ $seo['title'] ?? 'Café Finca Helena' }}</title>
         @if (! empty($seo['noindex']) || request()->is('admin', 'admin/*'))
         <meta name="robots" content="noindex,nofollow">

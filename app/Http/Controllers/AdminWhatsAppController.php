@@ -82,7 +82,7 @@ class AdminWhatsAppController extends Controller
 
     public function assign(Request $request, WhatsappRequest $whatsappRequest): JsonResponse
     {
-        $data = $request->validate(['user_id' => ['required', 'integer', 'exists:users,id']]);
+        $data = $request->validate(['user_id' => ['required', 'integer', 'min:1', 'max:999999999999', 'exists:users,id']]);
 
         return $this->respond($this->whatsapp->assign($whatsappRequest, User::findOrFail($data['user_id'])));
     }

@@ -45,6 +45,8 @@ class AdminTodayController extends Controller
         return response()->json([
             'sections' => $data,
             'counts' => array_map(fn ($cards) => count($cards), $data),
+            // Approved payments on cancelled orders nobody reviewed yet: only the people who can review them (admin) get the alert.
+        ] + ($user->hasPermission('payments.review') ? ['payment_alerts' => app(\App\Services\PaymentService::class)->pendingReviews()] : []) + [
             // People an order can be handed to in the "Enviar" panel (only for those who may ship).
             'couriers' => $user->hasPermission('orders.ship')
                 ? User::query()->where('is_active', true)->where('role', 'delivery')->orderBy('name')->get(['id', 'name'])->map(fn (User $courier) => ['id' => $courier->id, 'name' => $courier->name])->values()

@@ -1,0 +1,5 @@
+@extends('errors::layout')
+@section('title', 'Demasiados intentos')
+@section('code', '429')
+@section('heading', 'Demasiados intentos seguidos')
+@section('message', 'Hiciste muchas solicitudes en poco tiempo. Espera un momento y vuelve a intentarlo.')

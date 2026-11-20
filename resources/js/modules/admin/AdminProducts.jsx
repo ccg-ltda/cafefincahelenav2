@@ -118,7 +118,7 @@ export default function AdminProducts() {
         setState('loading');
         fetch(`/admin/products/data?${params}`, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: controller.signal })
             .then(async response => {
-                if (response.status === 401 || response.redirected) { window.location.replace('/admin/login'); return null; }
+                if (response.status === 401 || response.redirected) { window.location.replace('/admin/login?expired=1'); return null; }
                 if (!response.ok) throw new Error('products');
                 return response.json();
             })

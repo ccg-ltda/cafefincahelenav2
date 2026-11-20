@@ -26,7 +26,7 @@ class AdminActivityController extends Controller
     private const CONTEXT_LABELS = [
         'reason' => 'Motivo', 'sku' => 'SKU', 'variant' => 'Presentación', 'filter' => 'Filtro', 'search' => 'Búsqueda', 'rows' => 'Filas exportadas',
         'email' => 'Correo intentado', 'login' => 'Usuario o correo intentado', 'delivery' => 'Repartidor', 'carrier' => 'Transportadora', 'tracking_number' => 'Guía', 'note' => 'Nota', 'units' => 'Unidades', 'order' => 'Pedido', 'image' => 'Imagen', 'admin' => 'Administrador',
-        'module' => 'Módulo', 'action' => 'Acción', 'from' => 'Desde', 'to' => 'Hasta', 'include_auth' => 'Incluye accesos',
+        'attempts' => 'Intentos fallidos', 'attempt' => 'Intento de pago', 'expires' => 'Vence', 'channel' => 'Canal', 'shipping' => 'Envío', 'minutes' => 'Bloqueo (minutos)', 'module' => 'Módulo', 'action' => 'Acción', 'from' => 'Desde', 'to' => 'Hasta', 'include_auth' => 'Incluye accesos',
     ];
 
     public function __construct(private readonly ActivityLogger $activity) {}
@@ -34,7 +34,7 @@ class AdminActivityController extends Controller
     private function filters(Request $request): array
     {
         return $request->validate([
-            'admin' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'admin' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:999999999999'],
             'module' => ['sometimes', 'nullable', Rule::in(array_keys(ActivityCatalog::MODULES))],
             'action' => ['sometimes', 'nullable', Rule::in(array_keys(ActivityCatalog::ACTIONS))],
             'from' => ['sometimes', 'nullable', 'date_format:Y-m-d'],

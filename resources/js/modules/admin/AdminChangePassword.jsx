@@ -26,7 +26,7 @@ export default function ChangePasswordForm({ session }) {
             });
             const data = await response.json().catch(() => ({}));
             if (response.ok) { window.location.assign(data.home || '/admin'); return; }
-            if (response.status === 401) { window.location.replace('/admin/login'); return; }
+            if (response.status === 401) { window.location.replace('/admin/login?expired=1'); return; }
             setError(data.errors?.password?.[0] || data.message || 'No fue posible guardar la contraseña. Inténtalo de nuevo.');
         } catch { setError('No fue posible conectar. Comprueba tu conexión e inténtalo de nuevo.'); }
         setPending(false);

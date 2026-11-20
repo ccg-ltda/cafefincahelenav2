@@ -1,0 +1,5 @@
+@extends('errors::layout')
+@section('title', 'Algo salió mal')
+@section('code', '500')
+@section('heading', 'Algo salió mal de nuestro lado')
+@section('message', 'Ya estamos enterados. Inténtalo de nuevo en unos minutos; si el problema sigue, escríbenos por WhatsApp.')

@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import { buildCatalog } from '../modules/catalog/catalogData';
+import { clearCheckout, dropCheckoutKey } from '../modules/storefront/checkoutForm';
+import { cancelPendingOrderRequest, clearPendingOrder, fetchPendingState, payPendingOrder, readPendingOrder } from '../modules/storefront/pendingOrder';
 
 export const StorefrontContext = createContext(null);
 const CART_STORAGE_KEY = 'cfh-cart';
@@ -47,6 +49,19 @@ export function StorefrontProvider({ children }) {
     const cartRef = useRef(cart);
     cartRef.current = cart;
     const [cartNotice, setCartNotice] = useState([]);
+    // Two things must be known before the cart is judged against the stock, because the stock already lost the units of an order
+    // that is not the cart's fault: the payment result page (`pageHold`) and a pending order the customer left behind (`pendingHold`).
+    // The catalogue loaded meanwhile waits in `heldCatalog` until both let go; only then it may be applied (with its notices).
+    const pageHold = useRef(false);
+    const pendingHold = useRef(false);
+    const heldCatalog = useRef(null);
+    const reloadCatalog = useRef(() => {});
+    // The pending order of this browser (reference + total) and what the server says about it: checking | pending.
+    const [pendingOrder, setPendingOrder] = useState(() => {
+        const record = readPendingOrder();
+        pendingHold.current = record !== null;
+        return record ? { ...record, state: 'checking', can_cancel: false } : null;
+    });
     const [hasPromotions, setHasPromotions] = useState(false);
     const [products, setProducts] = useState([]);
     const [catalog, setCatalog] = useState([]);
@@ -54,6 +69,72 @@ export function StorefrontProvider({ children }) {
     const [drawer, setDrawer] = useState(false);
     const [checkout, setCheckout] = useState(false);
     const [policy, setPolicy] = useState(null);
+    const applyReconcile = variants => {
+        const reconciled = reconcileCart(cartRef.current, variants);
+        setCart(reconciled.cart);
+        setCartNotice([...new Set(reconciled.messages)]);
+    };
+    const applyHeldCatalog = () => {
+        const variants = heldCatalog.current;
+        heldCatalog.current = null;
+        if (variants) applyReconcile(variants);
+    };
+    const holdCartReconcile = () => { pageHold.current = true; };
+    const releaseCartReconcile = apply => {
+        pageHold.current = false;
+        if (!apply) heldCatalog.current = null;
+        else if (!pendingHold.current) applyHeldCatalog();
+    };
+    // The pending order is over (paid, cancelled, expired or unknown): let go of the hold. `apply` = judge the cart against the stock now.
+    const settlePending = apply => {
+        pendingHold.current = false;
+        setPendingOrder(null);
+        if (!apply) heldCatalog.current = null;
+        else if (!pageHold.current) applyHeldCatalog();
+    };
+    const orderIsPaid = () => {
+        clearPendingOrder(); clearCheckout();
+        try { window.localStorage.removeItem(CART_STORAGE_KEY); } catch { /* storage unavailable */ }
+        setCart({});
+        settlePending(false); // paid: the stock they "lost" is their own purchase, no notice
+    };
+    const orderIsGone = () => {
+        clearPendingOrder(); dropCheckoutKey(); // a new order needs a new key, or the server would answer with the cancelled one
+        settlePending(true);
+    };
+    useEffect(() => {
+        const record = readPendingOrder();
+        if (!record) return undefined;
+        let alive = true;
+        fetchPendingState(record).then(answer => {
+            if (!alive) return;
+            if (answer.state === 'pending') setPendingOrder({ ...record, total_cop: answer.total_cop ?? record.total_cop, state: 'pending', can_cancel: Boolean(answer.can_cancel) });
+            else if (answer.state === 'paid') orderIsPaid();
+            else orderIsGone(); // cancelled, expired or not recognised
+        }).catch(() => {
+            // The server could not be reached: keep the record and ask again next time; do not judge the cart on stock that includes this order.
+            if (alive) { pendingHold.current = false; heldCatalog.current = null; setPendingOrder(current => (current ? { ...current, state: 'unreachable' } : current)); }
+        });
+        return () => { alive = false; };
+    }, []);
+    /** "Cancelar pedido y editar carrito". Returns an error message, or null when it is done. */
+    const cancelPending = async () => {
+        if (!pendingOrder) return null;
+        try {
+            const answer = await cancelPendingOrderRequest(pendingOrder);
+            if (answer.state === 'cancelled' || answer.state === 'unknown') {
+                // The units are back in the stock: judge the cart against a FRESH catalogue, never the one loaded while they were reserved.
+                clearPendingOrder(); dropCheckoutKey(); settlePending(false); reloadCatalog.current();
+                return null;
+            }
+            if (answer.state === 'paid') { orderIsPaid(); return null; }
+            if (answer.state === 'pending') setPendingOrder(current => ({ ...current, can_cancel: false })); // a payment is in process
+            return answer.message;
+        } catch {
+            return 'No pudimos conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.';
+        }
+    };
+    const payPending = () => (pendingOrder ? payPendingOrder(pendingOrder) : Promise.resolve(null));
     useEffect(() => {
         const controller = new AbortController();
         let retryTimeout;
@@ -68,9 +149,8 @@ export function StorefrontProvider({ children }) {
                 setProducts(variants);
                 setCatalog(grouped);
                 setHasPromotions(Boolean(result.meta?.has_promotions));
-                const reconciled = reconcileCart(cartRef.current, variants);
-                setCart(reconciled.cart);
-                setCartNotice([...new Set(reconciled.messages)]);
+                if (pageHold.current || pendingHold.current) heldCatalog.current = variants;
+                else applyReconcile(variants);
                 setCatalogStatus('ready');
             } catch (error) {
                 if (!controller.signal.aborted) {
@@ -79,6 +159,7 @@ export function StorefrontProvider({ children }) {
                 }
             }
         }
+        reloadCatalog.current = () => { window.clearTimeout(retryTimeout); loadCatalog(); };
         loadCatalog();
         return () => { controller.abort(); window.clearTimeout(retryTimeout); };
     }, []);
@@ -111,6 +192,6 @@ export function StorefrontProvider({ children }) {
     };
     const items = products.filter(p => cart[p.id] > 0).map(p => ({ ...p, quantity: cart[p.id] }));
     const selectCategory = value => { setCategory(value); setSubcategory('Todas'); setSearch(''); };
-    return <StorefrontContext.Provider value={{ search, setSearch, category, selectCategory, subcategory, setSubcategory, products, catalog, catalogStatus, hasPromotions, cart, changeQuantity, cartNotice, dismissCartNotice: () => setCartNotice([]), items, drawer, setDrawer, checkout, setCheckout, policy, setPolicy }}>{children}</StorefrontContext.Provider>;
+    return <StorefrontContext.Provider value={{ search, setSearch, category, selectCategory, subcategory, setSubcategory, products, catalog, catalogStatus, hasPromotions, cart, changeQuantity, cartNotice, holdCartReconcile, releaseCartReconcile, orderPaid: orderIsPaid, pendingOrder, cancelPending, payPending, dismissCartNotice: () => setCartNotice([]), items, drawer, setDrawer, checkout, setCheckout, policy, setPolicy }}>{children}</StorefrontContext.Provider>;
 }
 export const useStorefront = () => useContext(StorefrontContext);

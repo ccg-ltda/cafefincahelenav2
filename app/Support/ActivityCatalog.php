@@ -30,23 +30,24 @@ class ActivityCatalog
         'inventory' => ['stock_adjusted', 'stock_returned'],
         'promotions' => ['created', 'updated', 'activated', 'deactivated', 'deleted'],
         'coupons' => ['created', 'updated', 'activated', 'deactivated', 'deleted'],
-        'orders' => ['status_changed', 'updated'],
+        'orders' => ['status_changed', 'updated', 'payment_received_on_cancelled', 'payment_reviewed', 'email_resent', 'created_manual', 'payment_link_created'],
         'customers' => ['marketing_opted_out', 'exported'],
         'whatsapp' => ['created', 'taken', 'assigned', 'resolved', 'reopened', 'notes_updated', 'quick_reply_updated'],
         'users' => ['created', 'updated', 'role_changed', 'deactivated', 'reactivated', 'password_reset', 'password_changed'],
         'activity' => ['exported'],
-        'auth' => ['login', 'login_failed', 'logout'],
+        'auth' => ['login', 'login_failed', 'account_locked', 'logout'],
     ];
 
     public const ACTIONS = [
         'created' => 'Creó', 'updated' => 'Actualizó', 'deleted' => 'Eliminó', 'activated' => 'Activó', 'deactivated' => 'Desactivó',
         'status_changed' => 'Cambió estado', 'stock_adjusted' => 'Ajustó stock', 'stock_returned' => 'Devolvió stock', 'exported' => 'Exportó',
         'marketing_opted_out' => 'Marcó "no quiere promociones"', 'taken' => 'Tomó', 'assigned' => 'Asignó', 'resolved' => 'Resolvió', 'reopened' => 'Reabrió',
-        'notes_updated' => 'Actualizó notas', 'role_changed' => 'Cambió el rol', 'password_reset' => 'Restableció contraseña', 'password_changed' => 'Cambió su contraseña', 'reactivated' => 'Reactivó', 'quick_reply_updated' => 'Editó respuesta rápida',
-        'login' => 'Inició sesión', 'login_failed' => 'Intento fallido', 'logout' => 'Cerró sesión',
+        'notes_updated' => 'Actualizó notas', 'role_changed' => 'Cambió el rol', 'password_reset' => 'Restableció contraseña', 'password_changed' => 'Cambió su contraseña', 'reactivated' => 'Reactivó', 'quick_reply_updated' => 'Editó respuesta rápida', 'payment_received_on_cancelled' => 'Pago recibido en pedido cancelado', 'payment_reviewed' => 'Revisó pago en pedido cancelado', 'email_resent' => 'Reenvió un correo del pedido',
+        'created_manual' => 'Creó pedido manual', 'payment_link_created' => 'Generó link de pago', 'login' => 'Inició sesión', 'login_failed' => 'Intento fallido', 'account_locked' => 'Cuenta bloqueada', 'logout' => 'Cerró sesión',
     ];
 
     public const FIELDS = [
+        'shipping_cop' => 'Envío (COP)',
         'name' => 'Nombre', 'category_id' => 'Categoría', 'short_description' => 'Descripción corta', 'description' => 'Descripción', 'is_published' => 'Publicado',
         'is_active' => 'Activo', 'price_cop' => 'Precio (COP)', 'weight_grams' => 'Peso (g)', 'grind_type' => 'Molienda', 'stock_quantity' => 'Stock',
         'discount_type' => 'Tipo de descuento', 'discount_value' => 'Valor del descuento', 'starts_at' => 'Inicio', 'ends_at' => 'Fin', 'variant_ids' => 'Presentaciones',
@@ -79,7 +80,7 @@ class ActivityCatalog
             $model instanceof Category => 'Categoría: '.$model->name,
             $model instanceof Promotion => 'Promoción #'.$model->id.': '.($model->product?->name ?? 'producto'),
             $model instanceof Coupon => 'Cupón: '.$model->code,
-            $model instanceof Customer => 'Cliente: '.(ActivityRedactor::maskEmail($model->email) ?? '[valor no válido]'),
+            $model instanceof Customer => 'Cliente: '.($model->email ? (ActivityRedactor::maskEmail($model->email) ?? '[valor no válido]') : 'sin correo ···'.substr((string) $model->phone, -4)),
             $model instanceof WhatsappRequest => 'Solicitud de WhatsApp: '.$model->name,
             $model instanceof WhatsappQuickReply => 'Respuesta rápida: '.$model->title,
             $model instanceof User => 'Usuario: '.$model->name.' (@'.$model->username.')',

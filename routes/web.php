@@ -17,6 +17,10 @@ use App\Http\Controllers\AdminCustomerController;
 use App\Http\Controllers\AdminWhatsAppController;
 use App\Http\Controllers\AdminActivityController;
 use App\Http\Controllers\PromotionsPageController;
+use App\Http\Controllers\AdminEmailPreviewController;
+use App\Http\Controllers\AdminManualOrderController;
+use App\Http\Controllers\AdminOrderNotificationController;
+use App\Http\Controllers\AdminOrderPaymentController;
 use App\Http\Controllers\AdminOrderStatusController;
 use App\Http\Controllers\AdminTodayController;
 use App\Http\Controllers\AdminUserController;
@@ -41,7 +45,7 @@ Route::middleware(EnsureStaff::class)->group(function () {
             $route->middleware(RequirePagePermission::class.':'.$page['permission']);
         }
         if (preg_match_all('/\{(\w+)\}/', $page['path'], $parameters)) {
-            $route->whereNumber($parameters[1]);
+            $route->whereId($parameters[1]);
         }
     }
 
@@ -56,12 +60,29 @@ Route::middleware(EnsureStaff::class)->group(function () {
     // Orders: orders.list opens Pedidos; each role gets its own slice (see AdminOrderController). Status steps are shared by Hoy and Pedidos.
     // There is NO route to confirm an order or mark it as paid: that is PaymentService, called by the payment webhook.
     Route::get('/admin/orders/data', [AdminOrderController::class, 'index'])->middleware('can:orders.list');
-    Route::get('/admin/orders/{order}/detail', [AdminOrderController::class, 'show'])->whereNumber('order')->middleware('can:orders.list');
-    Route::patch('/admin/orders/{order}/prepare', [AdminOrderStatusController::class, 'prepare'])->whereNumber('order')->middleware('can:orders.prepare');
-    Route::patch('/admin/orders/{order}/ready', [AdminOrderStatusController::class, 'ready'])->whereNumber('order')->middleware('can:orders.prepare');
-    Route::patch('/admin/orders/{order}/ship', [AdminOrderStatusController::class, 'ship'])->whereNumber('order')->middleware('can:orders.ship');
-    Route::patch('/admin/orders/{order}/reassign', [AdminOrderStatusController::class, 'reassign'])->whereNumber('order')->middleware('can:orders.ship');
-    Route::patch('/admin/orders/{order}/deliver', [AdminOrderStatusController::class, 'deliver'])->whereNumber('order')->middleware('can:orders.deliver');
+    Route::get('/admin/orders/{order}/detail', [AdminOrderController::class, 'show'])->whereId('order')->middleware('can:orders.list');
+    Route::patch('/admin/orders/{order}/prepare', [AdminOrderStatusController::class, 'prepare'])->whereId('order')->middleware('can:orders.prepare');
+    Route::patch('/admin/orders/{order}/ready', [AdminOrderStatusController::class, 'ready'])->whereId('order')->middleware('can:orders.prepare');
+    Route::patch('/admin/orders/{order}/ship', [AdminOrderStatusController::class, 'ship'])->whereId('order')->middleware('can:orders.ship');
+    Route::patch('/admin/orders/{order}/reassign', [AdminOrderStatusController::class, 'reassign'])->whereId('order')->middleware('can:orders.ship');
+    Route::patch('/admin/orders/{order}/deliver', [AdminOrderStatusController::class, 'deliver'])->whereId('order')->middleware('can:orders.deliver');
+    // Manual order (the administrator registers an order that came by WhatsApp or phone), admin only. It is always paid through Wompi:
+    // nothing here marks an order as paid. Static paths first; ids are digits (whereId).
+    Route::middleware(['can:orders.create_manual', 'throttle:manual-order'])->group(function () {
+        Route::get('/admin/orders/manual/products', [AdminManualOrderController::class, 'products']);
+        Route::get('/admin/orders/manual/customer', [AdminManualOrderController::class, 'customer']);
+        Route::post('/admin/orders/manual/quote', [AdminManualOrderController::class, 'quote']);
+        Route::post('/admin/orders/manual', [AdminManualOrderController::class, 'store']);
+        Route::get('/admin/orders/{order}/checkout-link', [AdminManualOrderController::class, 'link'])->whereId('order');
+        Route::post('/admin/orders/{order}/checkout-link', [AdminManualOrderController::class, 'renewLink'])->whereId('order');
+    });
+    // Emails of an order and template preview, admin only. The preview sends nothing.
+    Route::post('/admin/orders/{order}/notifications/{notification}/resend', [AdminOrderNotificationController::class, 'resend'])->whereId(['order', 'notification'])->middleware('can:emails.manage');
+    Route::get('/admin/emails/preview', [AdminEmailPreviewController::class, 'index'])->middleware('can:emails.manage');
+    Route::get('/admin/emails/preview/{type}', [AdminEmailPreviewController::class, 'show'])->middleware('can:emails.manage');
+    // Wompi, admin only. Neither can mark anything as paid: "refresh" asks Wompi and PaymentService applies the answer; "review" clears an alert.
+    Route::post('/admin/orders/{order}/wompi/refresh', [AdminOrderPaymentController::class, 'refresh'])->whereId('order')->middleware('can:payments.refresh');
+    Route::post('/admin/orders/{order}/wompi/review', [AdminOrderPaymentController::class, 'review'])->whereId('order')->middleware('can:payments.review');
 
     // dashboard.view
     Route::get('/admin/dashboard/summary', AdminDashboardController::class)->middleware('can:dashboard.view');
@@ -71,73 +92,73 @@ Route::middleware(EnsureStaff::class)->group(function () {
         Route::get('/admin/promotions/data', [AdminPromotionController::class, 'index']);
         Route::get('/admin/promotions/products', [AdminPromotionController::class, 'products']);
         Route::post('/admin/promotions', [AdminPromotionController::class, 'store']);
-        Route::get('/admin/promotions/{promotion}', [AdminPromotionController::class, 'show'])->whereNumber('promotion');
-        Route::put('/admin/promotions/{promotion}', [AdminPromotionController::class, 'update'])->whereNumber('promotion');
-        Route::patch('/admin/promotions/{promotion}/status', [AdminPromotionController::class, 'status'])->whereNumber('promotion');
-        Route::delete('/admin/promotions/{promotion}', [AdminPromotionController::class, 'destroy'])->whereNumber('promotion');
+        Route::get('/admin/promotions/{promotion}', [AdminPromotionController::class, 'show'])->whereId('promotion');
+        Route::put('/admin/promotions/{promotion}', [AdminPromotionController::class, 'update'])->whereId('promotion');
+        Route::patch('/admin/promotions/{promotion}/status', [AdminPromotionController::class, 'status'])->whereId('promotion');
+        Route::delete('/admin/promotions/{promotion}', [AdminPromotionController::class, 'destroy'])->whereId('promotion');
     });
 
     Route::middleware('can:activity.view')->group(function () {
         Route::get('/admin/activity/data', [AdminActivityController::class, 'index']);
         Route::get('/admin/activity/export', [AdminActivityController::class, 'export']);
-        Route::get('/admin/activity/{entry}/detail', [AdminActivityController::class, 'show'])->whereNumber('entry');
+        Route::get('/admin/activity/{entry}/detail', [AdminActivityController::class, 'show'])->whereId('entry');
     });
 
     Route::middleware('can:whatsapp.manage')->group(function () {
         Route::get('/admin/whatsapp/data', [AdminWhatsAppController::class, 'index']);
         Route::post('/admin/whatsapp/requests', [AdminWhatsAppController::class, 'store']);
-        Route::put('/admin/whatsapp/quick-replies/{quickReply}', [AdminWhatsAppController::class, 'updateQuickReply'])->whereNumber('quickReply');
-        Route::get('/admin/whatsapp/requests/{whatsappRequest}', [AdminWhatsAppController::class, 'show'])->whereNumber('whatsappRequest');
-        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/take', [AdminWhatsAppController::class, 'take'])->whereNumber('whatsappRequest');
-        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/assign', [AdminWhatsAppController::class, 'assign'])->whereNumber('whatsappRequest');
-        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/resolve', [AdminWhatsAppController::class, 'resolve'])->whereNumber('whatsappRequest');
-        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/reopen', [AdminWhatsAppController::class, 'reopen'])->whereNumber('whatsappRequest');
-        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/notes', [AdminWhatsAppController::class, 'notes'])->whereNumber('whatsappRequest');
+        Route::put('/admin/whatsapp/quick-replies/{quickReply}', [AdminWhatsAppController::class, 'updateQuickReply'])->whereId('quickReply');
+        Route::get('/admin/whatsapp/requests/{whatsappRequest}', [AdminWhatsAppController::class, 'show'])->whereId('whatsappRequest');
+        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/take', [AdminWhatsAppController::class, 'take'])->whereId('whatsappRequest');
+        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/assign', [AdminWhatsAppController::class, 'assign'])->whereId('whatsappRequest');
+        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/resolve', [AdminWhatsAppController::class, 'resolve'])->whereId('whatsappRequest');
+        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/reopen', [AdminWhatsAppController::class, 'reopen'])->whereId('whatsappRequest');
+        Route::patch('/admin/whatsapp/requests/{whatsappRequest}/notes', [AdminWhatsAppController::class, 'notes'])->whereId('whatsappRequest');
     });
 
     Route::middleware('can:customers.view')->group(function () {
         Route::get('/admin/customers/data', [AdminCustomerController::class, 'index']);
         Route::get('/admin/customers/export', [AdminCustomerController::class, 'export']);
-        Route::get('/admin/customers/{customer}/detail', [AdminCustomerController::class, 'show'])->whereNumber('customer');
+        Route::get('/admin/customers/{customer}/detail', [AdminCustomerController::class, 'show'])->whereId('customer');
     });
-    Route::patch('/admin/customers/{customer}/marketing-opt-out', [AdminCustomerController::class, 'optOut'])->whereNumber('customer')->middleware('can:customers.manage');
+    Route::patch('/admin/customers/{customer}/marketing-opt-out', [AdminCustomerController::class, 'optOut'])->whereId('customer')->middleware('can:customers.manage');
 
     Route::middleware('can:coupons.manage')->group(function () {
         Route::get('/admin/coupons/data', [AdminCouponController::class, 'index']);
         Route::post('/admin/coupons', [AdminCouponController::class, 'store']);
-        Route::get('/admin/coupons/{coupon}', [AdminCouponController::class, 'show'])->whereNumber('coupon');
-        Route::put('/admin/coupons/{coupon}', [AdminCouponController::class, 'update'])->whereNumber('coupon');
-        Route::patch('/admin/coupons/{coupon}/status', [AdminCouponController::class, 'status'])->whereNumber('coupon');
-        Route::delete('/admin/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->whereNumber('coupon');
+        Route::get('/admin/coupons/{coupon}', [AdminCouponController::class, 'show'])->whereId('coupon');
+        Route::put('/admin/coupons/{coupon}', [AdminCouponController::class, 'update'])->whereId('coupon');
+        Route::patch('/admin/coupons/{coupon}/status', [AdminCouponController::class, 'status'])->whereId('coupon');
+        Route::delete('/admin/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->whereId('coupon');
     });
 
     Route::middleware('can:products.manage')->group(function () {
         Route::get('/admin/products/data', AdminProductController::class);
         Route::get('/admin/products/categories/data', [AdminCategoryController::class, 'index']);
         Route::post('/admin/products/categories', [AdminCategoryController::class, 'store']);
-        Route::get('/admin/products/categories/{category}', [AdminCategoryController::class, 'show'])->whereNumber('category');
-        Route::put('/admin/products/categories/{category}', [AdminCategoryController::class, 'update'])->whereNumber('category');
-        Route::patch('/admin/products/categories/{category}/status', [AdminCategoryController::class, 'status'])->whereNumber('category');
-        Route::get('/admin/products/{product}/detail', [AdminProductEditorController::class, 'show']);
+        Route::get('/admin/products/categories/{category}', [AdminCategoryController::class, 'show'])->whereId('category');
+        Route::put('/admin/products/categories/{category}', [AdminCategoryController::class, 'update'])->whereId('category');
+        Route::patch('/admin/products/categories/{category}/status', [AdminCategoryController::class, 'status'])->whereId('category');
+        Route::get('/admin/products/{product}/detail', [AdminProductEditorController::class, 'show'])->whereId('product');
         Route::post('/admin/products', [AdminProductEditorController::class, 'store']);
-        Route::patch('/admin/products/{product}/status', [AdminProductController::class, 'status'])->whereNumber('product');
-        Route::put('/admin/products/{product}', [AdminProductEditorController::class, 'update']);
-        Route::post('/admin/products/{product}/variants', [AdminProductEditorController::class, 'storeVariant']);
-        Route::put('/admin/products/{product}/variants/{variant}', [AdminProductEditorController::class, 'updateVariant']);
-        Route::patch('/admin/products/{product}/variants/{variant}/status', [AdminProductEditorController::class, 'variantStatus'])->whereNumber(['product', 'variant']);
-        Route::get('/admin/products/{product}/variants/{variant}/stock-movements', [AdminStockController::class, 'index'])->whereNumber(['product', 'variant']);
+        Route::patch('/admin/products/{product}/status', [AdminProductController::class, 'status'])->whereId('product');
+        Route::put('/admin/products/{product}', [AdminProductEditorController::class, 'update'])->whereId('product');
+        Route::post('/admin/products/{product}/variants', [AdminProductEditorController::class, 'storeVariant'])->whereId('product');
+        Route::put('/admin/products/{product}/variants/{variant}', [AdminProductEditorController::class, 'updateVariant'])->whereId(['product', 'variant']);
+        Route::patch('/admin/products/{product}/variants/{variant}/status', [AdminProductEditorController::class, 'variantStatus'])->whereId(['product', 'variant']);
+        Route::get('/admin/products/{product}/variants/{variant}/stock-movements', [AdminStockController::class, 'index'])->whereId(['product', 'variant']);
     });
-    Route::post('/admin/products/{product}/variants/{variant}/stock', [AdminStockController::class, 'store'])->whereNumber(['product', 'variant'])->middleware('can:inventory.edit');
+    Route::post('/admin/products/{product}/variants/{variant}/stock', [AdminStockController::class, 'store'])->whereId(['product', 'variant'])->middleware('can:inventory.edit');
 
     Route::middleware('can:users.manage')->group(function () {
         Route::get('/admin/users/data', [AdminUserController::class, 'index']);
         Route::get('/admin/users/username-check', [AdminUserController::class, 'usernameCheck']);
         Route::post('/admin/users', [AdminUserController::class, 'store']);
-        Route::get('/admin/users/{user}/detail', [AdminUserController::class, 'show'])->whereNumber('user');
-        Route::put('/admin/users/{user}', [AdminUserController::class, 'update'])->whereNumber('user');
-        Route::patch('/admin/users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->whereNumber('user');
-        Route::patch('/admin/users/{user}/reactivate', [AdminUserController::class, 'reactivate'])->whereNumber('user');
-        Route::post('/admin/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->whereNumber('user');
+        Route::get('/admin/users/{user}/detail', [AdminUserController::class, 'show'])->whereId('user');
+        Route::put('/admin/users/{user}', [AdminUserController::class, 'update'])->whereId('user');
+        Route::patch('/admin/users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->whereId('user');
+        Route::patch('/admin/users/{user}/reactivate', [AdminUserController::class, 'reactivate'])->whereId('user');
+        Route::post('/admin/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->whereId('user');
     });
 });
 Route::any('/admin/{path}', fn () => abort(404))->where('path', '.*');

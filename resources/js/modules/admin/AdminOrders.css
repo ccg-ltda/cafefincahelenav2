@@ -48,7 +48,7 @@
 
 
 /* Coupon column: code pill + discount under it; "—" when the order has no coupon */
-.admin-orders-filters{grid-template-columns:minmax(220px,2fr) repeat(3,minmax(150px,1fr))}
+.admin-orders-filters{grid-template-columns:minmax(220px,2fr) repeat(4,minmax(130px,1fr))}
 @media(max-width:900px){.admin-orders-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.admin-orders-filters{grid-template-columns:minmax(0,1fr)}}
 .admin-products .admin-orders-table .is-coupon{text-align:center}
@@ -62,3 +62,10 @@
   .admin-orders-coupon-cell{flex-direction:row;align-items:center;gap:8px}
 }
 @media(min-width:901px){.admin-products .admin-orders-table td:first-child strong{white-space:nowrap}}
+.admin-order-email-list{list-style:none;margin:0;padding:0}
+.admin-order-email-list li{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #eee9e1}
+.admin-order-email-list li:last-child{border-bottom:0}
+.admin-order-email-list small{display:block;color:#71675e;font-size:12px}
+.admin-order-email-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.admin-order-email-error{color:#8c2216 !important}
+@media (max-width:640px){.admin-order-email-list li{grid-template-columns:1fr auto}.admin-order-email-list li>button{grid-column:1 / -1}}

@@ -1,0 +1,19 @@
+.pending-order-notice{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:130;width:min(600px,calc(100vw - 24px));display:flex;align-items:flex-start;gap:12px;background:#fff8e1;border:1px solid #c98a3f;border-radius:12px;padding:14px 16px;box-shadow:0 12px 32px -12px rgba(59,31,14,.45);color:#3b1f0e;font-family:inherit;font-size:14px;line-height:1.45}
+.pending-order-notice.is-pulsing{animation:pending-order-pulse .6s ease 2}
+@keyframes pending-order-pulse{0%,100%{box-shadow:0 12px 32px -12px rgba(59,31,14,.45)}50%{box-shadow:0 0 0 5px rgba(201,138,63,.55),0 12px 32px -12px rgba(59,31,14,.45)}}
+.pending-order-icon{flex:none;width:22px;height:22px;margin-top:1px;color:#8a5a12}
+.pending-order-body{flex:1;min-width:0}
+.pending-order-body strong{display:block;font-size:15px}
+.pending-order-ref{display:block;font-family:'Courier New',Courier,monospace;font-weight:700;margin:2px 0 4px}
+.pending-order-body p{margin:4px 0}
+.pending-order-error{color:#8c2216;font-weight:600}
+.pending-order-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pending-order-actions button{min-height:42px;padding:0 16px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+.pending-order-actions button:disabled{opacity:.6;cursor:default}
+.pending-order-primary{background:#2d5a27;color:#fff;border:0}
+.pending-order-secondary{background:#fff;color:#3b1f0e;border:1px solid #c9b79c}
+.pending-order-danger{background:#8c2216;color:#fff;border:0}
+.pending-order-spin{width:16px;height:16px;animation:pending-order-spin 1s linear infinite}
+@keyframes pending-order-spin{to{transform:rotate(360deg)}}
+@media (max-width:520px){.pending-order-actions{flex-direction:column}.pending-order-actions button{width:100%}}
+@media (prefers-reduced-motion:reduce){.pending-order-notice.is-pulsing,.pending-order-spin{animation:none}}

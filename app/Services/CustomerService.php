@@ -23,23 +23,34 @@ class CustomerService
      * Call it inside the order transaction. `$optIn` is the marketing box ticked in this order: it records the consent
      * (re-activating an earlier opt-out); an unticked box never erases a previous consent.
      *
-     * @param  array{customer_email: string, customer_name: string, customer_phone: string, delivery_city: string, delivery_department?: ?string, delivery_address: string, delivery_details?: ?string}  $data
+     * @param  array{customer_email?: ?string, customer_name: string, customer_phone: string, delivery_city: string, delivery_department?: ?string, delivery_address: string, delivery_details?: ?string}  $data
      */
     public function syncFromOrder(array $data, bool $optIn): Customer
     {
-        $email = $this->normalizeEmail($data['customer_email']);
+        // The storefront always sends an email; a manual order may not (the customer only has a phone).
+        $email = filled($data['customer_email'] ?? null) ? $this->normalizeEmail($data['customer_email']) : null;
         $profile = [
             'name' => $data['customer_name'], 'phone' => $data['customer_phone'], 'city' => $data['delivery_city'],
             'department' => $data['delivery_department'] ?? null, 'last_address' => $data['delivery_address'], 'last_address_details' => $data['delivery_details'] ?? null,
         ];
 
-        $customer = Customer::query()->where('email', $email)->lockForUpdate()->first();
+        $customer = $email !== null ? Customer::query()->where('email', $email)->lockForUpdate()->first() : null;
+        if (! $customer) {
+            // Without an email the customer is identified by phone among those that have none; with an email that nobody has yet,
+            // a customer that had only a phone is completed instead of duplicated.
+            $byPhone = Customer::query()->whereNull('email')->where('phone', $data['customer_phone'])->orderBy('id')->lockForUpdate()->first();
+            if ($byPhone) {
+                $customer = $byPhone;
+                $email !== null && $profile['email'] = $email;
+            }
+        }
+
         if (! $customer) {
             try {
                 $customer = Customer::create(['email' => $email] + $profile);
             } catch (QueryException $error) {
                 // A concurrent order created the same customer first: use it.
-                if ((string) $error->getCode() !== '23000' || ! ($customer = Customer::query()->where('email', $email)->first())) {
+                if ((string) $error->getCode() !== '23000' || $email === null || ! ($customer = Customer::query()->where('email', $email)->first())) {
                     throw $error;
                 }
                 $customer->update($profile);
@@ -77,7 +88,7 @@ class CustomerService
      */
     public function backfill(bool $dryRun = false): array
     {
-        $pending = Order::query()->whereNull('customer_id')->orderBy('created_at')->orderBy('id')->get();
+        $pending = Order::query()->whereNull('customer_id')->whereNotNull('customer_email')->orderBy('created_at')->orderBy('id')->get();
         $existing = Customer::query()->pluck('id', 'email')->all();
         $new = [];
 

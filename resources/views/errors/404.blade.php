@@ -1,0 +1,5 @@
+@extends('errors::layout')
+@section('title', 'Página no encontrada')
+@section('code', '404')
+@section('heading', 'No encontramos esa página')
+@section('message', 'Puede que el enlace esté mal escrito o que la página ya no exista. Puedes volver al inicio con el botón.')

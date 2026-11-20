@@ -81,6 +81,7 @@ class AdminDashboardController extends Controller
             'sales_by_day' => $byDay, 'orders_by_status' => $byStatus,
             'wompi_payments' => $wompi ? [['label' => 'Aprobados y verificados', 'value' => $wompi]] : [],
             'top_products' => $products, 'sales_by_city' => $byCity, 'recent_orders' => $recent, 'tasks' => $tasks,
+            'payment_alerts' => request()->user()->hasPermission('payments.review') ? app(\App\Services\PaymentService::class)->pendingReviews() : [],
         ])->header('Cache-Control', 'private, no-store');
     }
 }

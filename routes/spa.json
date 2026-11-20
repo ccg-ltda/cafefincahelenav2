@@ -4,6 +4,7 @@
         "login": { "path": "/admin/login", "title": "Acceso administrativo" },
         "pages": [
             { "path": "/admin/today", "title": "Hoy", "permission": "today.view" },
+            { "path": "/admin/orders/new", "title": "Pedido manual", "permission": "orders.create_manual" },
             { "path": "/admin", "title": "Dashboard", "permission": "dashboard.view" },
             { "path": "/admin/products", "title": "Productos", "permission": "products.manage" },
             { "path": "/admin/products/categories", "title": "Categorías", "permission": "products.manage" },
@@ -34,6 +35,7 @@
             "description": "Descuentos vigentes en los cafés de Café Finca Helena."
         },
         { "path": "/producto/{slug}", "page": "product", "layout": "shop" },
+        { "path": "/pago/resultado", "page": "payment-result", "layout": "shop", "title": "Resultado del pago | Café Finca Helena", "noindex": true },
         {
             "path": "/sello-de-origen", "page": "origin", "layout": "origin",
             "title": "Sello de origen | Café Finca Helena",

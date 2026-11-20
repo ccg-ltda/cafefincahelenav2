@@ -1,0 +1,5 @@
+@extends('errors::layout')
+@section('title', 'Sesión vencida')
+@section('code', '419')
+@section('heading', 'La página caducó')
+@section('message', 'Pasó demasiado tiempo desde que la abriste. Vuelve a cargarla e inténtalo otra vez.')

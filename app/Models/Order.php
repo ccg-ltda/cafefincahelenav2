@@ -20,7 +20,7 @@ class Order extends Model
 
     protected function casts(): array
     {
-        return ['subtotal_cop' => 'integer', 'shipping_cop' => 'integer', 'discount_cop' => 'integer', 'total_cop' => 'integer', 'paid_at' => 'datetime', 'confirmed_at' => 'datetime', 'shipped_at' => 'datetime', 'delivered_at' => 'datetime', 'status_changed_at' => 'datetime', 'terms_accepted_at' => 'datetime', 'data_consent_at' => 'datetime', 'marketing_opt_in' => 'boolean'];
+        return ['subtotal_cop' => 'integer', 'shipping_cop' => 'integer', 'discount_cop' => 'integer', 'total_cop' => 'integer', 'paid_at' => 'datetime', 'confirmed_at' => 'datetime', 'shipped_at' => 'datetime', 'delivered_at' => 'datetime', 'status_changed_at' => 'datetime', 'terms_accepted_at' => 'datetime', 'data_consent_at' => 'datetime', 'payment_due_at' => 'datetime', 'marketing_opt_in' => 'boolean'];
     }
 
     /**
@@ -29,7 +29,8 @@ class Order extends Model
      */
     public function scopeValid(Builder $query): Builder
     {
-        $query->where('orders.status', '<>', 'cancelled');
+        $query->where('orders.status', '<>', 'cancelled')
+            ->where(fn (Builder $manual) => $manual->where('orders.channel', '<>', 'manual')->orWhere('orders.payment_status', 'paid'));
 
         return config('shop.require_payment_before_fulfillment') ? $query->where('orders.payment_status', 'paid') : $query;
     }

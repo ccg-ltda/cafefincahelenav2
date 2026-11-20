@@ -16,7 +16,8 @@ export default function AdminPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [pending, setPending] = useState(false);
     const [errors, setErrors] = useState({});
-    const [message, setMessage] = useState('');
+    // /admin/login?expired=1 is where the panel sends a person whose session ended (inactivity, deactivation, a password change elsewhere).
+    const [message, setMessage] = useState(() => (window.location.pathname === '/admin/login' && new URLSearchParams(window.location.search).has('expired') ? 'Tu sesión se cerró por inactividad. Vuelve a iniciar sesión.' : ''));
     const [session, setSession] = useState(null); // who is signed in and what they may do (GET /admin/session)
     const isChange = window.location.pathname === '/admin/change-password';
     const isLoginShell = isLogin || isChange;
@@ -27,7 +28,7 @@ export default function AdminPage() {
         const controller = new AbortController();
         fetch('/admin/session', { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: controller.signal })
             .then(async response => {
-                if (response.status === 401) { window.location.replace('/admin/login'); return; }
+                if (response.status === 401) { window.location.replace('/admin/login?expired=1'); return; }
                 if (!response.ok) throw new Error();
                 setSession(await response.json());
             }).catch(error => { if (error.name !== 'AbortError') setMessage('No se pudo consultar la sesión.'); });

@@ -18,6 +18,9 @@ final class Permissions
         'products.manage', 'promotions.manage', 'coupons.manage',
         'customers.view', 'customers.manage',
         'whatsapp.manage', 'activity.view', 'users.manage',
+        'payments.refresh', 'payments.review', // admin only: query Wompi for an order / mark a payment alert as reviewed (never "mark as paid")
+        'orders.create_manual', // admin only: register an order that came by WhatsApp or phone (it is always paid through Wompi)
+        'emails.manage', // admin only: see and resend the emails of an order, preview the templates
     ];
 
     private const DISPATCH = ['today.view', 'orders.list', 'orders.view_all', 'orders.prepare', 'orders.ship', 'orders.deliver', 'orders.print'];

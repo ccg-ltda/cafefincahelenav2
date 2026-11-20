@@ -1,0 +1,33 @@
+/* /pago/resultado: the result of a Wompi payment, with the storefront palette (inherits --verde, --crema, --ink, --line, --miel from .demo-home). */
+.demo-home .pay-result{display:grid;place-items:start center;min-height:60vh;padding:clamp(24px,6vw,72px) 16px}
+.demo-home .pay-card{width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center;gap:14px;padding:clamp(24px,5vw,40px) clamp(18px,4vw,36px);border:1px solid var(--line);border-radius:18px;background:#fff;text-align:center;box-shadow:0 10px 30px rgba(59,36,25,.07)}
+.demo-home .pay-icon{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:var(--verde);color:#fff}
+.demo-home .pay-icon svg{width:38px;height:38px}
+.demo-home .pay-card.is-declined .pay-icon,.demo-home .pay-card.is-unknown .pay-icon{background:#b43a2c}
+.demo-home .pay-card.is-pending .pay-icon,.demo-home .pay-card.is-loading .pay-icon,.demo-home .pay-card.is-unavailable .pay-icon{background:var(--miel,#c8883a)}
+.demo-home .pay-card h1{margin:4px 0 0;font-size:clamp(26px,5vw,34px);line-height:1.15;color:var(--ink)}
+.demo-home .pay-card p{margin:0;color:var(--ink);font-size:16px;line-height:1.55;max-width:44ch}
+.demo-home .pay-note{display:inline-flex;align-items:center;gap:8px;font-size:14px!important;color:#6f655b!important}
+.demo-home .pay-note svg{width:16px;height:16px}
+.demo-home .pay-error{padding:10px 14px;border-radius:10px;background:#fbe4e0;color:#8c2216!important;font-size:14px!important}
+.demo-home .pay-summary{width:100%;margin:6px 0 0;display:grid;gap:0;border:1px solid var(--line);border-radius:12px;background:var(--crema);text-align:left}
+.demo-home .pay-summary>div{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:11px 16px;border-bottom:1px solid var(--line)}
+.demo-home .pay-summary>div:last-child{border-bottom:0}
+.demo-home .pay-summary dt{margin:0;color:#6f655b;font-size:13px;font-weight:600}
+.demo-home .pay-summary dd{margin:0;color:var(--ink);font-size:15px;font-weight:700;text-align:right;overflow-wrap:anywhere}
+.demo-home .pay-ref{font:700 14px ui-monospace,Consolas,monospace!important;letter-spacing:.02em}
+.demo-home .pay-items{align-items:flex-start!important}
+.demo-home .pay-items ul{margin:0;padding:0;list-style:none;display:grid;gap:3px}
+.demo-home .pay-items li{font-weight:500;font-size:14px}
+.demo-home .pay-items b{color:var(--verde)}
+.demo-home .pay-actions{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
+.demo-home .pay-primary,.demo-home .pay-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 20px;border-radius:10px;font-weight:700;font-size:16px;text-decoration:none;cursor:pointer}
+.demo-home .pay-primary{border:0;background:var(--verde);color:#fff}
+.demo-home .pay-primary:disabled{opacity:.7;cursor:progress}
+.demo-home .pay-secondary{border:1.5px solid var(--verde);background:#fff;color:var(--verde)}
+.demo-home .pay-primary svg,.demo-home .pay-secondary svg{width:18px;height:18px}
+.demo-home .pay-spin{animation:pay-spin 1s linear infinite}
+@keyframes pay-spin{to{transform:rotate(360deg)}}
+@media(min-width:640px){.demo-home .pay-actions{flex-direction:row}.demo-home .pay-actions>*{flex:1}}
+@media(prefers-reduced-motion:reduce){.demo-home .pay-spin{animation-duration:3s}}
+.demo-home .co-notice a{color:var(--verde);font-weight:700;text-decoration:underline}

@@ -15,10 +15,10 @@ export const csrf = () => document.querySelector('meta[name="csrf-token"]')?.con
 export async function request(url, options = {}) {
     const headers = { Accept: 'application/json', 'X-CSRF-TOKEN': csrf(), ...options.headers };
     const response = await fetch(url, { ...options, headers, credentials: 'same-origin' });
-    if (response.status === 401 || response.redirected) { window.location.replace('/admin/login'); throw new Error('Sesión expirada.'); }
+    if (response.status === 401 || response.redirected) { window.location.replace('/admin/login?expired=1'); throw new Error('Sesión expirada.'); }
     if (response.status === 419) { const error = new Error('La sesión o el token de seguridad vencieron. Recarga la página e inicia sesión de nuevo si es necesario.'); error.confirmedRejected = true; throw error; }
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) { const error = new Error(response.status === 422 ? 'Revisa los campos señalados.' : response.status === 409 && data.message ? data.message : 'No fue posible guardar o consultar la información.'); error.fields = data.errors || {}; error.status = response.status; error.currentStock = data.current_stock; error.confirmedRejected = [422, 403, 404, 409].includes(response.status); throw error; }
+    if (!response.ok) { const error = new Error(response.status === 422 ? 'Revisa los campos señalados.' : response.status === 409 && data.message ? data.message : 'No fue posible guardar o consultar la información.'); error.fields = data.errors || {}; error.data = data; error.status = response.status; error.currentStock = data.current_stock; error.confirmedRejected = [422, 403, 404, 409].includes(response.status); throw error; }
     return data;
 }
 

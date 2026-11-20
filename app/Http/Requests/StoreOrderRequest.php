@@ -62,7 +62,7 @@ class StoreOrderRequest extends QuoteOrderRequest
             // Optional and never pre-ticked: promotions by WhatsApp and email (Ley 1581).
             'marketing_opt_in' => ['sometimes', 'nullable', 'boolean'],
             // Total the customer reviewed; the order is refused if the database total differs.
-            'expected_total_cop' => ['nullable', 'integer', 'min:0'],
+            'expected_total_cop' => ['nullable', 'integer', 'min:0', 'max:999999999999'],
         ];
     }
 

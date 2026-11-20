@@ -1,30 +1,63 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Printer } from 'lucide-react';
 import './AdminFulfillment.css';
 import AdminConfirmDialog from './AdminConfirmDialog';
 import StatusBadge from './StatusBadge';
 import { request, titleCase } from './adminShared';
 import { useAdminToast } from './AdminToast';
+import { nationalNumber, shopWhatsapp } from '../storefront/shop';
 import { ShipFields, runStep, shipPayload, stepError, useShip } from './orderActions';
 
 const dateTime = value => (value ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota' }).format(new Date(value)) : '—');
 const json = body => ({ headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
-// Printable dispatch sheet: customer, address, notes and what to pack. No prices, no email.
+// Printable dispatch sheet: it goes INSIDE the package and the customer reads it, so it carries the brand. No prices, no totals, no email.
+// It is drawn in a portal on <body> (outside #root) so the print stylesheet can hide the whole admin and print only this.
+const longDate = value => (value ? new Intl.DateTimeFormat('es-CO', { dateStyle: 'long', timeZone: 'America/Bogota' }).format(new Date(value)) : '');
+// "Café Premium 125 g Molido" -> "Café Premium · 125 g · Molido" (cosmetic only: any other shape of name is left as it is)
+const itemLabel = name => { const m = name.match(/^([^\d×+]+?)\s+(\d[\d.,]*\s?(?:g|gr|kg))\s+(\p{L}[\p{L} ]*)$/u); return m ? `${m[1]} · ${m[2]} · ${m[3]}` : name; };
+
 function DispatchSheet({ order }) {
-    return <div className="dispatch-sheet" aria-hidden="true">
-        <h1>Hoja de despacho · {order.reference}</h1>
-        <p className="dispatch-sheet-date">Pedido #{order.id} · {dateTime(order.created_at)}</p>
-        <h2>Entrega</h2>
-        <p><strong>{titleCase(order.customer_name)}</strong> · {order.customer_phone}</p>
-        <p>{order.delivery_address}{order.delivery_details ? ` — ${order.delivery_details}` : ''}</p>
-        <p>{order.delivery_city}{order.delivery_department ? `, ${order.delivery_department}` : ''}</p>
-        {order.order_notes && <p className="dispatch-sheet-notes"><strong>Notas:</strong> {order.order_notes}</p>}
-        <h2>Productos</h2>
-        <table><thead><tr><th>✓</th><th>Cantidad</th><th>Producto</th><th>SKU</th></tr></thead>
-            <tbody>{order.items.map(item => <tr key={item.id}><td className="dispatch-sheet-box" /><td>{item.quantity}</td><td>{item.name}</td><td>{item.sku}</td></tr>)}</tbody></table>
-        {(order.assigned_delivery || order.carrier) && <p><strong>Envío:</strong> {order.assigned_delivery ? `Repartidor ${titleCase(order.assigned_delivery.name)}` : `${order.carrier}${order.tracking_number ? ` · guía ${order.tracking_number}` : ''}`}</p>}
-    </div>;
+    const whatsapp = shopWhatsapp();
+    const shipping = order.assigned_delivery ? `Repartidor: ${titleCase(order.assigned_delivery.name)}` : order.carrier ? `Transportadora: ${order.carrier}${order.tracking_number ? ` · Guía ${order.tracking_number}` : ''}` : '';
+    const place = [order.delivery_city, order.delivery_department].filter(Boolean).join(', ');
+    return createPortal(<div className="dispatch-sheet" aria-hidden="true">
+        <table className="ds-frame"><thead><tr><td><div className="ds-margin" /></td></tr></thead>
+            <tfoot><tr><td><div className="ds-margin" /></td></tr></tfoot>
+            <tbody><tr><td className="ds-page">
+                <header className="ds-head">
+                    <img src="/media/email/logo.png" alt="" width="64" height="64" />
+                    <div className="ds-brand"><strong>Café Finca Helena</strong><span>Café de Norte de Santander</span></div>
+                    <div className="ds-doc"><span>Hoja de despacho</span><b>{order.reference}</b><small>{longDate(order.created_at)}</small></div>
+                </header>
+
+                <section className="ds-to">
+                    <h2>Para</h2>
+                    <p className="ds-name">{titleCase(order.customer_name)}</p>
+                    <p>Cel. {order.customer_phone}</p>
+                    <p className="ds-address">{order.delivery_address}</p>
+                    {order.delivery_details && <p>{order.delivery_details}</p>}
+                    <p>{place}</p>
+                </section>
+
+                {order.order_notes && <section className="ds-notes"><h2>Notas del pedido</h2><p>{order.order_notes}</p></section>}
+
+                <section>
+                    <h2>Tu pedido</h2>
+                    <table className="ds-items"><thead><tr><th className="ds-check" /><th className="ds-qty">Cant.</th><th>Producto</th><th className="ds-sku">SKU</th></tr></thead>
+                        <tbody>{order.items.map(item => <tr key={item.id}><td className="ds-check"><span className="ds-box" /></td><td className="ds-qty">{item.quantity}</td><td>{itemLabel(item.name)}</td><td className="ds-sku">{item.sku}</td></tr>)}</tbody></table>
+                </section>
+
+                {shipping && <p className="ds-ship">{shipping}</p>}
+
+                <footer className="ds-foot">
+                    <p className="ds-thanks">Gracias por elegir Café Finca Helena. Este café fue seleccionado y tostado en pequeños lotes para ti.</p>
+                    <p className="ds-help">¿Necesitas ayuda con tu pedido? {whatsapp && <>WhatsApp {nationalNumber(whatsapp)}</>}</p>
+                    <p className="ds-internal">Preparado por: ______________________ &nbsp;&nbsp; Fecha: ______________</p>
+                </footer>
+            </td></tr></tbody></table>
+    </div>, document.body);
 }
 
 // `order.next` comes from the server: the next step for THIS person and status (null when there is none). It is the same
@@ -100,6 +133,6 @@ export default function AdminOrderFulfillment({ order, can, onChange, onStale })
                 <textarea id="order-note" rows={2} maxLength={500} value={note} placeholder={next.step === 'deliver' ? 'Ej.: recibió el portero' : ''} onChange={event => setNote(event.target.value)} /></label>
         </AdminConfirmDialog>}
 
-        <DispatchSheet order={order} />
+        {can('orders.print') && <DispatchSheet order={order} />}
     </section>;
 }

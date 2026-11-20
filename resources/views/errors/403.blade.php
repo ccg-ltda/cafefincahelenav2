@@ -1,0 +1,5 @@
+@extends('errors::layout')
+@section('title', 'Sin acceso')
+@section('code', '403')
+@section('heading', 'No tienes acceso a esta página')
+@section('message', 'Tu usuario no tiene permiso para ver esta sección. Si crees que es un error, avisa a quien administra la tienda.')
