@@ -1,0 +1,76 @@
+{
+    "site": "Café Finca Helena",
+    "admin": {
+        "login": { "path": "/admin/login", "title": "Acceso administrativo" },
+        "pages": [
+            { "path": "/admin/today", "title": "Hoy", "permission": "today.view" },
+            { "path": "/admin", "title": "Dashboard", "permission": "dashboard.view" },
+            { "path": "/admin/products", "title": "Productos", "permission": "products.manage" },
+            { "path": "/admin/products/categories", "title": "Categorías", "permission": "products.manage" },
+            { "path": "/admin/promotions", "title": "Promociones", "permission": "promotions.manage" },
+            { "path": "/admin/coupons", "title": "Cupones", "permission": "coupons.manage" },
+            { "path": "/admin/customers", "title": "Clientes", "permission": "customers.view" },
+            { "path": "/admin/customers/{customer}", "title": "Cliente", "permission": "customers.view" },
+            { "path": "/admin/users", "title": "Usuarios", "permission": "users.manage" },
+            { "path": "/admin/users/{user}", "title": "Usuario", "permission": "users.manage" },
+            { "path": "/admin/activity", "title": "Historial", "permission": "activity.view" },
+            { "path": "/admin/activity/{entry}", "title": "Registro del historial", "permission": "activity.view" },
+            { "path": "/admin/whatsapp", "title": "WhatsApp", "permission": "whatsapp.manage" },
+            { "path": "/admin/whatsapp/{request}", "title": "Solicitud de WhatsApp", "permission": "whatsapp.manage" },
+            { "path": "/admin/orders", "title": "Pedidos", "permission": "orders.list" },
+            { "path": "/admin/orders/{order}", "title": "Pedido", "permission": "orders.list" },
+            { "path": "/admin/change-password", "title": "Crea tu nueva contraseña" }
+        ]
+    },
+    "storefront": [
+        {
+            "path": "/", "page": "home", "layout": "shop",
+            "title": "Café Finca Helena | Café 100% colombiano de Norte de Santander",
+            "description": "Compra café de Finca Helena, 100% colombiano y de Norte de Santander. Molido o en grano, con envíos a toda Colombia."
+        },
+        {
+            "path": "/promociones", "page": "promotions", "layout": "shop",
+            "title": "Promociones | Café Finca Helena",
+            "description": "Descuentos vigentes en los cafés de Café Finca Helena."
+        },
+        { "path": "/producto/{slug}", "page": "product", "layout": "shop" },
+        {
+            "path": "/sello-de-origen", "page": "origin", "layout": "origin",
+            "title": "Sello de origen | Café Finca Helena",
+            "description": "Conoce el origen del café de Finca Helena: el Catatumbo, Norte de Santander, su proceso y su trazabilidad."
+        },
+        {
+            "path": "/sello-de-origen.html", "page": "origin", "layout": "origin",
+            "title": "Sello de origen | Café Finca Helena",
+            "description": "Conoce el origen del café de Finca Helena: el Catatumbo, Norte de Santander, su proceso y su trazabilidad."
+        },
+        {
+            "path": "/blog", "page": "blog", "layout": "blog",
+            "title": "El Rincón del Café | Café Finca Helena",
+            "description": "Historias, recetas y origen: todo lo que hay detrás de una buena taza de café de Finca Helena."
+        },
+        {
+            "path": "/blog.html", "page": "blog", "layout": "blog",
+            "title": "El Rincón del Café | Café Finca Helena",
+            "description": "Historias, recetas y origen: todo lo que hay detrás de una buena taza de café de Finca Helena."
+        },
+        { "path": "/blog/{slug}", "page": "article", "layout": "article" }
+    ],
+    "articles": [
+        {
+            "slug": "tostion-media-baja",
+            "title": "Tostión media-baja: qué es y por qué la elegimos",
+            "description": "Qué significa la tostión media-baja, cómo cambia el sabor del café y por qué en Finca Helena la elegimos para resaltar las notas de panela, nuez y aroma…"
+        },
+        {
+            "slug": "cafe-en-prensa-francesa",
+            "title": "Cómo preparar café en prensa francesa, paso a paso",
+            "description": "Guía sencilla para preparar café en prensa francesa en casa: proporción, molienda, temperatura y tiempo para una taza con cuerpo y aroma."
+        },
+        {
+            "slug": "helena-mujeres-caficultoras",
+            "title": "Helena: la voz de las mujeres caficultoras del Catatumbo",
+            "description": "Quién es Helena, la figura que da nombre a nuestro café: un símbolo de las mujeres y familias caficultoras del Catatumbo, Norte de Santander."
+        }
+    ]
+}

@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/storage/app/screenshots
+
+# Referencia de diseño (no se despliega)
+/docs/references/
