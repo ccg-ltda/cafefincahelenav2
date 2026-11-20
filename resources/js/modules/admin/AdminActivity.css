@@ -1,0 +1,58 @@
+/* Historial (it reuses the products list, header, pagination and the customer drawer sections) */
+.admin-activity-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 16px;align-items:end;margin-top:26px;padding:20px}
+.admin-activity-field{display:flex;flex-direction:column;gap:7px;min-width:0;color:#62584e;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.admin-activity-field :is(select,input){width:100%;min-width:0;min-height:44px;padding:0 12px;border:1px solid #e4ddd2;border-radius:8px;background:#fff;color:#3e352e;font:400 14px Inter,Arial,sans-serif;text-transform:none;letter-spacing:0}
+.admin-activity-field :is(select,input):focus-visible{outline:3px solid #96622c;outline-offset:2px}
+.admin-activity-field input[aria-invalid=true]{border-color:#a8452b}
+.admin-activity-check{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:#3e352e;font-size:14px;cursor:pointer}
+.admin-activity-check input{width:18px;height:18px;accent-color:#315d38}
+.admin-activity-actions{display:flex;align-items:center;gap:16px;grid-column:span 2;justify-content:flex-end}
+.admin-activity-clear{color:#315d38;font:700 13px Inter,Arial,sans-serif;text-decoration:underline;cursor:pointer}
+.admin-activity-clear[aria-disabled=true]{color:#9d958c;pointer-events:none;text-decoration:none}
+.admin-activity-clear:focus-visible{outline:3px solid #96622c;outline-offset:2px;border-radius:3px}
+.admin-activity-error{grid-column:1/-1;margin:0;color:#8a3a22;font-size:13px}
+
+.admin-activity-table td,.admin-activity-table th{vertical-align:middle}
+.admin-activity-row{cursor:pointer}
+.admin-activity-row:focus-visible{outline:3px solid #96622c;outline-offset:-3px}
+.admin-activity-row.is-failed td{background:#fbeeea}
+.admin-activity-row.is-failed:hover td{background:#f8e3dc}
+.admin-activity-date{white-space:nowrap;font-variant-numeric:tabular-nums}
+.admin-activity-table strong{color:#3b2419}
+.admin-activity-action{display:inline-block;padding:2px 10px;border-radius:999px;background:#eef3ec;color:#264d2d;font:600 12px/1.4 Inter,Arial,sans-serif;white-space:nowrap}
+.admin-activity-action.is-failed{background:#f6d9d1;color:#8a3a22}
+.admin-activity-link{color:#264d2d;font-weight:700;overflow-wrap:anywhere}
+.admin-activity-pagination{display:flex;align-items:center;justify-content:center;gap:16px}
+.admin-activity-pagination span{color:#62584e;font-size:13px}
+
+/* Drawer */
+.admin-categories-drawer.admin-activity-drawer{width:clamp(480px,42vw,640px)}
+.admin-activity-changes-wrap{overflow-x:auto}
+.admin-activity-changes{width:100%;border-collapse:collapse;font-size:13px}
+.admin-activity-changes th,.admin-activity-changes td{padding:9px 10px;border-bottom:1px solid #e9e2d8;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.admin-activity-changes thead th{color:#71675e;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.admin-activity-changes tbody th{color:#3b2419;font-weight:700}
+.admin-activity-changes del{color:#a8452b;text-decoration:line-through}
+.admin-activity-changes ins{color:#264d2d;text-decoration:none;font-weight:600}
+.admin-activity-none{margin:0;color:#776a5d;font-size:13px}
+.admin-activity-mono{font-family:ui-monospace,Consolas,monospace;font-size:12px;overflow-wrap:anywhere}
+
+@media(max-width:1100px){.admin-activity-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-activity-actions{grid-column:span 3}}
+@media(max-width:700px){.admin-activity-filters{grid-template-columns:minmax(0,1fr);padding:16px}.admin-activity-actions{grid-column:auto;justify-content:space-between}.admin-activity-actions .admin-categories-primary{flex:1}.admin-activity-pagination button{min-height:44px}
+    .admin-activity-table tbody.is-failed{background:#fbeeea}.admin-activity-row.is-failed td,.admin-activity-row.is-failed:hover td{background:transparent}
+    .admin-activity-date{white-space:normal}}
+@media(max-width:600px){.admin-categories-drawer.admin-activity-drawer{width:100%}.admin-activity-changes thead{display:none}.admin-activity-changes,.admin-activity-changes tbody,.admin-activity-changes tr,.admin-activity-changes th,.admin-activity-changes td{display:block}
+    .admin-activity-changes tr{padding:10px 0;border-bottom:1px solid #e9e2d8}.admin-activity-changes th,.admin-activity-changes td{padding:2px 0;border:0}.admin-activity-changes td::before{content:attr(data-label) ": ";color:#71675e;font-size:11px;font-weight:700;text-transform:uppercase}}
+
+/* Review fixes: one-row filters on wide screens, header alignment, export button and pager never stack */
+.admin-activity .admin-customers-export{white-space:nowrap}
+.admin-activity-table th:last-child{text-align:left}
+.admin-activity-table td:last-child{text-align:left}
+.admin-activity-pagination{flex-direction:row!important;flex-wrap:nowrap;gap:10px}
+.admin-activity-pagination button{white-space:nowrap}
+@media(min-width:1280px){
+    .admin-activity-filters{grid-template-columns:repeat(3,minmax(0,1fr)) 142px 142px auto auto;gap:12px;padding:18px 20px}
+    .admin-activity-actions{grid-column:auto;gap:12px}
+    .admin-activity-check{white-space:nowrap}
+}
+@media(max-width:700px){.admin-activity-table td:last-child{text-align:right}}

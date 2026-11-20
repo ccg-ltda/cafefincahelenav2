@@ -1,0 +1,72 @@
+/* WhatsApp module (it reuses the dashboard cards, the customer pills and the drawer shell) */
+.admin-wa-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:26px}
+.admin-wa-summary .dashboard-card{display:flex;flex-direction:column;gap:6px;padding:18px 20px;min-width:0}
+.admin-wa-summary span{color:#71675e;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.admin-wa-summary strong{color:#3b2419;font:600 30px/1.1 Fraunces,Georgia,serif}
+.admin-wa-summary small{color:#776a5d;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.admin-wa-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:16px;margin-top:16px;align-items:start}
+.admin-wa-side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.admin-wa-card{padding:20px;min-width:0}
+.admin-wa-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.admin-wa-card-head h2{margin:0;color:#3b2419;font:600 20px/1.2 Fraunces,Georgia,serif}
+.admin-wa-card-head [role=status]{color:#71675e;font-size:12px}
+.admin-wa-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.admin-wa-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.admin-wa-item{display:flex;flex-direction:column;gap:8px;width:100%;padding:14px;border:1px solid #e9e2d8;border-radius:10px;background:#fff;text-align:left;cursor:pointer;font-family:Inter,Arial,sans-serif;transition:background-color .15s,border-color .15s}
+.admin-wa-item:hover{background:#faf7f1;border-color:#d9cfbf}
+.admin-wa-item:focus-visible{outline:3px solid #96622c;outline-offset:2px}
+.admin-wa-item-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.admin-wa-item-top strong{color:#3b2419;font-size:14px;overflow-wrap:anywhere}
+.admin-wa-phone{flex:none;color:#5c5249;font:600 12px ui-monospace,Consolas,monospace}
+.admin-wa-item-tags{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.admin-wa-item p{margin:0;color:#4a3f36;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.admin-wa-item-foot{display:flex;justify-content:space-between;gap:12px;color:#776a5d;font-size:12px}
+.admin-wa-topic{display:inline-block;padding:2px 10px;border-radius:999px;font:600 12px/1.4 Inter,Arial,sans-serif;white-space:nowrap}
+.admin-wa-topic.is-wholesale{background:#f6e7cf;color:#6b3f12}
+.admin-wa-topic.is-order_support{background:#e3eefc;color:#1a4a8a}
+.admin-wa-topic.is-buying_help{background:#e3f1e0;color:#1f4d1c}
+.admin-wa-empty{display:inline-flex;flex-direction:column;align-items:center;gap:8px}
+.admin-wa-empty svg{width:30px;height:30px;color:#315d38}
+.admin-wa-form{display:flex;flex-direction:column;gap:12px}
+.admin-wa-field{display:flex;flex-direction:column;gap:7px;color:#62584e;font-size:12px;font-weight:700;min-width:0}
+.admin-wa-field em{font-weight:400;font-style:normal;color:#9d958c}
+.admin-wa-field :is(input,select,textarea){width:100%;min-width:0;padding:0 12px;border:1px solid #e4ddd2;border-radius:8px;background:#fff;color:#3e352e;font:400 14px Inter,Arial,sans-serif}
+.admin-wa-field :is(input,select){min-height:44px}
+.admin-wa-field textarea{padding:10px 12px;line-height:1.45;resize:vertical}
+.admin-wa-field :is(input,select,textarea)[aria-invalid=true]{border-color:#a8452b}
+.admin-wa-form .admin-categories-error,.admin-wa-reply .admin-categories-error{margin-top:-6px}
+.admin-wa-submit{width:100%}
+.admin-wa-replies{display:grid;gap:12px}
+.admin-wa-reply{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #e9e2d8;border-radius:10px;background:#faf7f1}
+.admin-wa-reply header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-wa-reply header strong{color:#3b2419;font-size:14px}
+.admin-wa-reply-body{margin:0;color:#3e352e;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.admin-wa-copy{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border:1px solid #cfdccb;border-radius:8px;background:#fff;color:#264d2d;font:700 12px Inter,Arial,sans-serif;cursor:pointer}
+.admin-wa-copy svg{width:15px;height:15px}
+.admin-wa-copy:hover{background:#eff4ed}
+.admin-wa-copy.is-copied{background:#315d38;border-color:#315d38;color:#fff}
+.admin-wa-copy:focus-visible{outline:3px solid #96622c;outline-offset:2px}
+@media(pointer:coarse),(max-width:700px){.admin-wa-copy{min-height:44px}}
+.admin-wa-preview{padding:10px 12px;border-radius:10px;background:#e7f5dc;border:1px solid #cfe6bf}
+.admin-wa-preview span{display:block;margin-bottom:6px;color:#5a7a45;font-size:11px;font-weight:700}
+.admin-wa-preview p{margin:0;color:#1f2d17;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* Drawer */
+.admin-categories-drawer.admin-wa-drawer{width:clamp(480px,42vw,620px)}
+.admin-wa-message{margin:0;padding:12px;border-radius:10px;background:#faf7f1;border:1px solid #e9e2d8;color:#3e352e;font-size:14px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.admin-wa-link{color:#264d2d;font-weight:700}
+.admin-wa-notfound{display:inline;color:#8a3a22!important;font-size:12px}
+.admin-wa-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.admin-wa-resolve,.admin-wa-assign{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.admin-wa-assign{flex-direction:row;align-items:flex-end}
+.admin-wa-assign .admin-wa-field{flex:1}
+.admin-wa-assign .admin-categories-secondary{flex:none}
+.admin-wa-save-notes{margin-top:10px}
+.admin-wa-open{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;background:#2f6b3a;color:#fff;font:700 13px Inter,Arial,sans-serif;text-decoration:none}
+.admin-wa-open svg{width:16px;height:16px}
+.admin-wa-open:hover{background:#265a30}
+.admin-wa-open:focus-visible{outline:3px solid #96622c;outline-offset:2px}
+
+@media(max-width:1100px){.admin-wa-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.admin-wa-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.admin-wa-summary{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:20px}.admin-categories-drawer.admin-wa-drawer{width:100%}.admin-wa-assign{flex-direction:column;align-items:stretch}.admin-wa-card{padding:16px}}

@@ -1,0 +1,41 @@
+/* Order fulfillment panel, deliveries page and read-only inventory */
+.admin-fulfillment{margin-top:16px}
+.admin-fulfillment-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.admin-fulfillment-head h2{margin:0}
+.admin-fulfillment dl small{display:block;margin-top:2px;color:#776a5d;font-size:12px}
+.admin-fulfillment-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.admin-fulfillment-actions svg{width:16px;height:16px}
+.admin-fulfillment-hint{margin:0;color:#776a5d;font-size:13px}
+.admin-fulfillment-reassign{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:12px}
+.admin-fulfillment-reassign .admin-categories-field{flex:1;min-width:200px}
+.admin-fulfillment-history{margin-top:18px;padding-top:14px;border-top:1px solid #ece6dc}
+.admin-fulfillment-history h3{margin:0 0 10px;color:#3b2419;font:600 15px Fraunces,Georgia,serif}
+.admin-fulfillment-history ol{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.admin-fulfillment-history li{display:flex;gap:12px;align-items:flex-start}
+.admin-fulfillment-dot{flex:none;width:10px;height:10px;margin-top:7px;border-radius:50%;background:#315d38}
+.admin-fulfillment-history small{display:block;margin-top:3px;color:#776a5d;font-size:12px}
+.admin-fulfillment-history p{margin:4px 0 0;color:#3e352e;font-size:13px}
+.admin-fulfillment-modes{display:flex;gap:10px;margin-bottom:12px}
+.admin-fulfillment-modes label{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:1.5px solid #e4ddd2;border-radius:10px;font:600 13px Inter,Arial,sans-serif;cursor:pointer}
+.admin-fulfillment-modes label.is-selected{border-color:#315d38;background:#f4f8f2;color:#264d2d}
+.admin-fulfillment-modes input{accent-color:#315d38}
+.admin-confirm-body .admin-categories-field{display:flex;flex-direction:column;gap:6px;margin-top:10px;color:#62584e;font-size:12px;font-weight:700}
+.admin-confirm-body .admin-categories-field em{font-weight:400;font-style:normal;color:#9d958c}
+.admin-confirm-body .admin-categories-field :is(input,select,textarea){width:100%;min-height:44px;padding:0 12px;border:1px solid #e4ddd2;border-radius:8px;background:#fff;color:#3e352e;font:400 14px Inter,Arial,sans-serif}
+.admin-confirm-body .admin-categories-field textarea{padding:10px 12px;min-height:0;resize:vertical}
+
+/* Printable dispatch sheet: invisible on screen */
+.dispatch-sheet{display:none}
+@media print{
+    body *{visibility:hidden}
+    .dispatch-sheet,.dispatch-sheet *{visibility:visible}
+    .dispatch-sheet{display:block;position:absolute;left:0;top:0;width:100%;padding:24px;color:#000;font:14px/1.5 Arial,sans-serif;background:#fff}
+    .dispatch-sheet h1{margin:0 0 4px;font-size:22px}
+    .dispatch-sheet h2{margin:18px 0 6px;font-size:15px;border-bottom:1px solid #000}
+    .dispatch-sheet p{margin:3px 0}
+    .dispatch-sheet table{width:100%;border-collapse:collapse;margin-top:6px}
+    .dispatch-sheet th,.dispatch-sheet td{padding:6px 8px;border:1px solid #000;text-align:left}
+    .dispatch-sheet-box{width:28px}
+}
+
+

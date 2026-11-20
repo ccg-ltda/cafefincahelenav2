@@ -1,0 +1,64 @@
+.admin-orders-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:26px}
+.admin-orders-summary .dashboard-card{display:flex;flex-direction:column;gap:6px;padding:18px 20px}
+.admin-orders-summary span{color:#71675e;font-size:12px;font-weight:700}
+.admin-orders-summary strong{color:#3b2419;font:600 28px/1.1 Fraunces,Georgia,serif}
+.admin-orders-id{display:block;margin-top:2px;color:#71675e;font-size:11px}
+.admin-products-row-actions a.admin-action{text-decoration:none}
+.admin-order-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+.admin-products-list.admin-order-block{margin-top:20px}
+.admin-order-card{padding:20px;min-width:0}
+.admin-order-card h2{margin:0 0 12px;color:#3b2419;font:600 20px/1.2 Fraunces,Georgia,serif}
+.admin-order-card dl{margin:0;display:grid;gap:0}
+.admin-order-card dl>div{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:9px 0;border-top:1px solid #eee9e1}
+.admin-order-card dl>div:first-child{border-top:0}
+.admin-order-card dt{flex:none;color:#71675e;font-size:12px;font-weight:700}
+.admin-order-card dd{margin:0;min-width:0;color:#3e352e;font-size:13px;text-align:right;overflow-wrap:anywhere}
+.admin-order-totals .is-total dt,.admin-order-totals .is-total dd{color:#3b2419;font-size:15px;font-weight:700}
+.admin-order-payment{padding-bottom:12px;margin-bottom:12px;border-bottom:2px solid #eee9e1}
+.admin-order-payment:last-child{margin-bottom:0;padding-bottom:0;border-bottom:0}
+.admin-order-empty{margin:0;color:#71675e;font-size:13px}
+@media(max-width:900px){.admin-order-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.admin-orders-summary{grid-template-columns:minmax(0,1fr);gap:10px;margin-top:20px}.admin-order-card{padding:16px}.admin-order-card dl>div{flex-direction:column;align-items:flex-start;gap:2px}.admin-order-card dd{text-align:left}}
+
+/* Orders table: balanced columns, right-aligned total, soft hover */
+.admin-products .admin-orders-table{table-layout:auto}
+.admin-products .admin-orders-table th:nth-child(1){width:14%}.admin-products .admin-orders-table th:nth-child(2){width:13%}.admin-products .admin-orders-table th:nth-child(3){width:21%}.admin-products .admin-orders-table th:nth-child(4){width:10%}.admin-products .admin-orders-table th:nth-child(5){width:11%}.admin-products .admin-orders-table th:nth-child(6),.admin-products .admin-orders-table th:nth-child(7){width:10%}.admin-products .admin-orders-table th:nth-child(8){width:1%}
+.admin-products .admin-orders-table .is-total{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.admin-products .admin-orders-table td strong.admin-orders-customer{display:block;font-weight:600}
+.admin-products .admin-orders-table td small.admin-orders-email{margin-top:2px;color:#71675e;font-size:12px;overflow-wrap:anywhere}
+.admin-products .admin-orders-table tbody tr{transition:background-color .15s}
+@media(hover:hover){.admin-products .admin-orders-table tbody tr:hover{background:#faf7f1}}
+
+/* Under 900px the table becomes stacked cards inside its own card: nothing overflows the page */
+@media(max-width:900px){
+  .admin-products .admin-orders-table{min-width:0;display:block}
+  .admin-products .admin-orders-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  .admin-products .admin-orders-table tbody{display:grid;gap:12px;padding:0 16px 16px}
+  .admin-products .admin-orders-table tr{display:block;border:1px solid #e9e2d8;border-radius:10px;background:#fff;padding:4px 14px}
+  .admin-products .admin-orders-table td{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #f1ede7;text-align:right;min-width:0}
+  .admin-products .admin-orders-table td:last-child{border-bottom:0;white-space:normal}
+  .admin-products .admin-orders-table td::before{content:attr(data-label);flex:none;color:#71675e;font-size:12px;font-weight:700;text-align:left}
+  .admin-products .admin-orders-table td>:is(strong,small,.admin-products-row-actions,.status-badge){text-align:right}
+  .admin-products .admin-orders-table td small{margin-top:2px}
+  .admin-products .admin-orders-table .is-total{text-align:right}
+  .admin-products .admin-orders-table .admin-products-row-actions{justify-content:flex-end}
+  .admin-products .admin-orders-table td:first-child small.admin-orders-id{display:block}
+}
+@media(max-width:480px){.admin-products .admin-orders-table td{flex-wrap:wrap}.admin-products .admin-orders-table td[data-label=Cliente]{align-items:flex-start}}
+
+
+/* Coupon column: code pill + discount under it; "—" when the order has no coupon */
+.admin-orders-filters{grid-template-columns:minmax(220px,2fr) repeat(3,minmax(150px,1fr))}
+@media(max-width:900px){.admin-orders-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.admin-orders-filters{grid-template-columns:minmax(0,1fr)}}
+.admin-products .admin-orders-table .is-coupon{text-align:center}
+.admin-orders-coupon-cell{display:flex;flex-direction:column;align-items:center;gap:3px}
+.admin-products .admin-orders-table code.admin-orders-coupon{display:inline-block;padding:2px 8px;border-radius:999px;background:#e3f1e0;color:#1f4d1c;font:600 12px/1.4 ui-monospace,Consolas,monospace;letter-spacing:.02em;white-space:nowrap}
+.admin-products .admin-orders-table .admin-orders-coupon-cell small{margin:0;color:#71675e;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.admin-orders-no-coupon{color:#c4bdb3}
+@media(max-width:900px){
+  .admin-products .admin-orders-table .is-coupon{text-align:right}
+  .admin-products .admin-orders-table td.is-coupon.is-empty{display:none}
+  .admin-orders-coupon-cell{flex-direction:row;align-items:center;gap:8px}
+}
+@media(min-width:901px){.admin-products .admin-orders-table td:first-child strong{white-space:nowrap}}

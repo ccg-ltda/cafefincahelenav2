@@ -1,0 +1,37 @@
+/* Coupons page (it reuses the products list, summary, filter and promotions styles) */
+.admin-coupons-code{display:inline-flex;align-items:center;gap:6px}
+.admin-coupons-code code{padding:3px 8px;border-radius:6px;background:#f5f2eb;color:#3b2419;font:700 13px ui-monospace,Consolas,monospace;letter-spacing:.03em;white-space:nowrap}
+.admin-coupons-code button{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;border:1px solid transparent;border-radius:6px;background:transparent;color:#6b625a;cursor:pointer}
+.admin-coupons-code button svg{width:15px;height:15px}
+.admin-coupons-code button:hover{background:#f5f2eb;border-color:#e4ddd2}
+.admin-coupons-code button:focus-visible{outline:3px solid #96622c;outline-offset:2px}
+@media(pointer:coarse),(max-width:700px){.admin-coupons-code button{width:44px;height:44px}}
+.admin-coupons .admin-products td.admin-coupons-description{max-width:240px;overflow-wrap:anywhere}
+.admin-coupons small,.admin-coupons .admin-products td small.admin-coupons-cap{display:block;margin-top:3px;color:#776a5d;font-size:11px;line-height:1.35}
+.admin-coupons-none{color:#9d958c}
+.admin-coupons-uses{display:flex;flex-direction:column;gap:5px;min-width:84px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.admin-coupons-bar{display:block;height:5px;border-radius:99px;background:#ece6dc;overflow:hidden}
+.admin-coupons-bar span{display:block;height:100%;border-radius:99px;background:#315d38}
+.admin-coupons-bar span.is-full{background:#a8452b}
+.admin-coupons .admin-products-table th,.admin-coupons .admin-products-table td{vertical-align:top}
+.admin-coupons .admin-products-table th{white-space:nowrap}
+/* Nine columns: the actions wrap in two lines so the table fits next to the sidebar. */
+.admin-coupons .admin-products-row-actions{flex-wrap:wrap;justify-content:flex-start;max-width:230px}
+.admin-coupons .admin-products-table th,.admin-coupons .admin-products-table td{padding-left:10px;padding-right:10px}
+.admin-coupons .admin-products td.admin-coupons-description{max-width:190px}
+
+/* Drawer */
+.admin-categories-drawer.admin-coupon-drawer{width:clamp(480px,40vw,580px)}
+.admin-coupon-code-row{display:flex;gap:8px}
+.admin-coupon-code-row input{flex:1;font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.admin-coupon-code-row .admin-categories-secondary{flex:none}
+.admin-coupon-field textarea{width:100%;min-height:64px;padding:10px 12px;border:1px solid #e4ddd2;border-radius:8px;background:#fff;color:#3e352e;font:400 14px Inter,Arial,sans-serif;resize:vertical}
+.admin-coupon-preview{padding:14px;border:1px solid #e9e2d8;border-radius:10px;background:#faf7f1}
+.admin-coupon-preview h3{margin:0 0 6px;color:#3b2419;font:600 17px/1.2 Fraunces,Georgia,serif}
+.admin-coupon-preview p{margin:0;color:#4a3f36;font-size:14px;line-height:1.5}
+.admin-coupon-preview strong{color:#264d2d}
+.admin-coupon-notice{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #ecd7a6;border-radius:8px;background:#fdf6e3;color:#6f4a00;font-size:13px;line-height:1.45}
+.admin-coupon-notice svg{flex:none;width:18px;height:18px;margin-top:1px}
+@media(max-width:600px){.admin-categories-drawer.admin-coupon-drawer{width:100%}}
+
+@media(max-width:900px){.admin-coupons .admin-products td>div{text-align:right}.admin-coupons-uses{align-items:flex-end}.admin-coupons-bar{width:90px}}
