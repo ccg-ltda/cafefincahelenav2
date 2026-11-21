@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\InventoryService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +19,9 @@ use Illuminate\Support\Facades\Storage;
  * - A product is found by its slug, by a replaced slug (`product_slug_redirects`) or by the SKU of one of its variants, so a
  *   product renamed by the admin or by the slug migration is never duplicated.
  * - A variant is found by SKU (unique). An existing one is left untouched.
- * - Stock is NOT seeded: new variants start at 0 ("Agotado") and the admin loads the real quantities (inventory movement "ajuste").
+ * - Stock: outside production every seeded variant that is at 0 and has no inventory movement gets INITIAL_STOCK (through
+ *   InventoryService, so it leaves an "ajuste" movement). Stock the admin already loaded or sold is never touched.
+ *   In production nothing is invented: variants stay at 0 ("Agotado") until the admin loads the real quantities.
  * - Images live in database/seeders/images/products (in git) and are copied to the `public` disk only when the file is missing.
  */
 class ProductSeeder extends Seeder
@@ -25,7 +29,10 @@ class ProductSeeder extends Seeder
     /** Where the initial images are kept in the repository. */
     private const IMAGES = __DIR__.'/images';
 
-    public function run(): void
+    /** Stock given to the seeded variants outside production. */
+    public const INITIAL_STOCK = 100;
+
+    public function run(InventoryService $inventory): void
     {
         $cafe = Category::where('slug', 'cafe')->firstOrFail();
 
@@ -97,15 +104,26 @@ class ProductSeeder extends Seeder
 
             foreach ($variants as [$sku, $name, $weight, $grind, $price, $image]) {
                 $this->copyImage($image);
-                if (ProductVariant::where('sku', $sku)->exists()) {
-                    continue; // already there (maybe edited by the admin): never overwritten
-                }
-                ProductVariant::create([
+                // An existing variant (maybe edited by the admin) is never overwritten, only its empty stock is filled.
+                $variant = ProductVariant::where('sku', $sku)->first() ?? ProductVariant::create([
                     'product_id' => $product->id, 'sku' => $sku, 'name' => $name, 'weight_grams' => $weight, 'grind_type' => $grind,
                     'price_cop' => $price, 'image_path' => $image, 'is_published' => true,
                 ]);
+                $this->seedStock($inventory, $variant);
             }
         }
+    }
+
+    /** Gives the initial stock to a variant that is at 0 and has never had a movement. Does nothing in production. */
+    private function seedStock(InventoryService $inventory, ProductVariant $variant): void
+    {
+        if (app()->isProduction() || (int) $variant->stock_quantity !== 0) {
+            return;
+        }
+        if (InventoryMovement::where('product_variant_id', $variant->id)->exists()) {
+            return;
+        }
+        $inventory->adjust($variant->id, 'ajuste', self::INITIAL_STOCK, 'Stock inicial del catálogo');
     }
 
     /** By slug, by a replaced slug (redirect) or by the product that already owns one of the SKUs. */
