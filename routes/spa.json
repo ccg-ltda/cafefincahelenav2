@@ -2,6 +2,9 @@
     "site": "Café Finca Helena",
     "admin": {
         "login": { "path": "/admin/login", "title": "Acceso administrativo" },
+        "public": [
+            { "path": "/admin/recover-password", "title": "Crea tu contraseña" }
+        ],
         "pages": [
             { "path": "/admin/today", "title": "Hoy", "permission": "today.view" },
             { "path": "/admin", "title": "Dashboard", "permission": "dashboard.view" },

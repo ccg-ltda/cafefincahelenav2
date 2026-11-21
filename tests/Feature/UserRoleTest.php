@@ -11,10 +11,14 @@ use App\Models\OrderStatusHistory;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\OrderStatusService;
+use App\Services\PaymentService;
+use App\Services\UserService;
 use App\Support\Permissions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class UserRoleTest extends TestCase
@@ -64,7 +68,7 @@ class UserRoleTest extends TestCase
     public function test_every_admin_endpoint_is_protected_by_a_permission(): void
     {
         $anyStaff = ['admin/session', 'admin/logout', 'admin/password'];
-        $public = ['admin/login', 'admin/{path}', 'admin/deliveries']; // the last one is only a 301 to /admin/today
+        $public = ['admin/login', 'admin/{path}', 'admin/deliveries', 'admin/recover-password', 'admin/password-link', 'admin/password-link/check']; // the last one is only a 301 to /admin/today
         foreach (Route::getRoutes() as $route) {
             $uri = $route->uri();
             if (! str_starts_with($uri, 'admin') || in_array($uri, $public, true) || in_array($uri, $anyStaff, true)) {
@@ -237,7 +241,7 @@ class UserRoleTest extends TestCase
         $dispatch = $this->person('dispatch');
         $courier = $this->person('delivery');
         $order = $this->order('pending');
-        app(\App\Services\PaymentService::class)->markPaid($order); // the payment, not the panel, confirms
+        app(PaymentService::class)->markPaid($order); // the payment, not the panel, confirms
         $this->actingAs($dispatch);
 
         $this->patchJson("/admin/orders/{$order->id}/prepare", ['note' => 'Empacando'])->assertOk()->assertJsonPath('order.status', 'preparing');
@@ -417,21 +421,21 @@ class UserRoleTest extends TestCase
         $this->login('sesion.viva', 'Clave-segura-1')->assertOk();
         $this->getJson('/admin/orders/data')->assertOk();
 
-        app(\App\Services\UserService::class)->update($target, ['name' => $target->name, 'username' => $target->username, 'email' => $target->email, 'role' => 'delivery'], $admin);
+        app(UserService::class)->update($target, ['name' => $target->name, 'username' => $target->username, 'email' => $target->email, 'role' => 'delivery'], $admin);
         $this->app['auth']->forgetGuards(); // the next request starts without the user cached in memory, like in production
         $this->getJson('/admin/session')->assertUnauthorized(); // the old session of the person is gone
 
         $this->login('sesion.viva', 'Clave-segura-1')->assertOk();
         $this->getJson('/admin/session')->assertOk()->assertJsonPath('role', 'delivery');
-        app(\App\Services\UserService::class)->deactivate($target, $admin);
+        app(UserService::class)->deactivate($target, $admin);
         $this->app['auth']->forgetGuards(); // the next request starts without the user cached in memory, like in production
         $this->getJson('/admin/session')->assertUnauthorized();
         $this->login('sesion.viva', 'Clave-segura-1')->assertStatus(422);
 
         $this->login('sesion.viva', 'Clave-segura-1');
-        app(\App\Services\UserService::class)->reactivate($target, $admin);
+        app(UserService::class)->reactivate($target, $admin);
         $this->login('sesion.viva', 'Clave-segura-1')->assertOk();
-        app(\App\Services\UserService::class)->resetPassword($target, $admin, 'Temporal-nueva-1');
+        app(UserService::class)->resetPassword($target, $admin, 'Temporal-nueva-1');
         $this->app['auth']->forgetGuards(); // the next request starts without the user cached in memory, like in production
         $this->getJson('/admin/session')->assertUnauthorized();
     }
@@ -452,7 +456,7 @@ class UserRoleTest extends TestCase
         $created = User::find($id);
         $this->assertNull($created->email);
         $this->assertSame($admin->id, $created->created_by);
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Temporal-12345', $created->password));
+        $this->assertTrue(Hash::check('Temporal-12345', $created->password));
         $this->assertSame('Usuario: Carlos Rojas (@carlos.rojas)', ActivityLog::where('action', 'created')->first()->subject_label);
 
         $this->putJson("/admin/users/$id", $this->newUser(['name' => 'Carlos A. Rojas']))->assertOk();
@@ -525,7 +529,7 @@ class UserRoleTest extends TestCase
         $this->assertSame(1, User::where('role', 'admin')->where('is_active', true)->count());
 
         $actor = $this->person('dispatch');
-        $service = app(\App\Services\UserService::class);
+        $service = app(UserService::class);
         $this->assertTrue($this->refuses(fn () => $service->deactivate($admin, $actor)));
         $this->assertTrue($this->refuses(fn () => $service->update($admin, ['name' => $admin->name, 'username' => $admin->username, 'email' => $admin->email, 'role' => 'dispatch'], $actor)));
         $this->assertSame([true, Role::Admin], [$admin->fresh()->is_active, $admin->fresh()->role]);
@@ -535,7 +539,7 @@ class UserRoleTest extends TestCase
     {
         try {
             $action();
-        } catch (\Illuminate\Validation\ValidationException $error) {
+        } catch (ValidationException $error) {
             return str_contains(json_encode($error->errors(), JSON_UNESCAPED_UNICODE), 'al menos un administrador activo');
         }
 

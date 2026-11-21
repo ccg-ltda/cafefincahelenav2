@@ -100,6 +100,16 @@ class AdminUserController extends Controller
         return $this->respond($request, $user->fresh(), 200, ['temporary_password' => $temporary]);
     }
 
+    /** The link comes back ONCE in this response (only its hash is stored); the administrator hands it over. */
+    public function passwordLink(Request $request, User $user): JsonResponse
+    {
+        $link = $this->users->createPasswordLink($user, $request->user());
+
+        return $this->respond($request, $user->fresh(), 200, [
+            'link' => url('/admin/recover-password').'#'.$link['token'], 'expires_at' => $link['expires_at']->toIso8601String(), 'valid_hours' => UserService::LINK_HOURS,
+        ]);
+    }
+
     private function validated(Request $request, ?User $user): array
     {
         $request->merge([

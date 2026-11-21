@@ -120,7 +120,7 @@ php artisan db:seed --force
 
 - `migrate` crea todas las tablas en orden y carga las 3 respuestas rápidas de WhatsApp.
 - `db:seed` carga el catálogo inicial: la categoría **Café**, los 4 productos y las 13 presentaciones (FH-001 a FH-013), y copia sus 10 imágenes (desde `database/seeders/images/products`) al disco público.
-- **El stock inicial queda en 0** ("Agotado"). Se carga desde el panel (paso 13).
+- **En producción el stock inicial queda en 0** ("Agotado"); el seeder solo da 100 unidades fuera de producción (`APP_ENV` distinto de `production`). Se carga desde el panel (paso 13).
 - **`db:seed` solo crea lo que falta.** Se puede correr varias veces sin riesgo: nunca cambia precios, stock, publicación, textos ni imágenes que el administrador haya editado.
 
 ---

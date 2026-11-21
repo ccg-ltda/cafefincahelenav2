@@ -35,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
         // Quote and order have their own buckets: unnamed throttles share one counter per IP, so ten quotes would block the order.
         RateLimiter::for('order-quote', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
         RateLimiter::for('order-store', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('password-link', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         // Strict limit for coupon validation (only quotes that carry a code count), so codes cannot be guessed by brute force.
         RateLimiter::for('coupons', fn (Request $request) => filled($request->input('coupon_code')) ? Limit::perMinute(10)->by($request->ip()) : Limit::none());
     }

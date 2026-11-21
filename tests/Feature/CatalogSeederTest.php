@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\InventoryService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +28,7 @@ class CatalogSeederTest extends TestCase
 
     private function seedCatalog(): void
     {
-        $this->seed(DatabaseSeeder::class);
+        $this->artisan('db:seed', ['--class' => DatabaseSeeder::class, '--force' => true])->assertSuccessful();
     }
 
     /** @return array<string, mixed> everything a second run could wrongly change */
@@ -48,7 +50,8 @@ class CatalogSeederTest extends TestCase
         $this->assertSame(13, ProductVariant::count());
         $this->assertSame(array_map(fn ($n) => sprintf('FH-%03d', $n), range(1, 13)), ProductVariant::orderBy('sku')->pluck('sku')->all());
         $this->assertSame(19900, ProductVariant::where('sku', 'FH-001')->value('price_cop'));
-        $this->assertSame(0, (int) ProductVariant::sum('stock_quantity')); // stock is never invented: "Agotado" until the admin loads it
+        $this->assertSame(13 * 100, (int) ProductVariant::sum('stock_quantity')); // outside production every variant starts with 100
+        $this->assertSame(13, InventoryMovement::count()); // through InventoryService: one movement each
         $this->assertSame(0, Product::where('is_published', false)->count() + ProductVariant::where('is_published', false)->count());
         $this->assertSame(10, ProductVariant::where('product_id', Product::where('slug', 'cafe-premium')->value('id'))->count());
         foreach (ProductVariant::pluck('image_path')->unique() as $path) {
@@ -65,6 +68,27 @@ class CatalogSeederTest extends TestCase
         $this->seedCatalog();
 
         $this->assertSame($first, $this->snapshot());
+    }
+
+    public function test_production_does_not_invent_stock(): void
+    {
+        $this->app['env'] = 'production';
+
+        $this->seedCatalog();
+
+        $this->assertSame(0, (int) ProductVariant::sum('stock_quantity')); // "Agotado" until the admin loads the real quantities
+        $this->assertSame(0, InventoryMovement::count());
+    }
+
+    public function test_it_fills_only_empty_untouched_stock_on_rerun(): void
+    {
+        $this->seedCatalog();
+        $sold = ProductVariant::where('sku', 'FH-002')->first();
+        app(InventoryService::class)->adjust($sold->id, 'ajuste', 0, 'Vendido todo'); // 0 but with history
+
+        $this->seedCatalog();
+
+        $this->assertSame(0, (int) $sold->fresh()->stock_quantity); // an admin's 0 with history is respected
     }
 
     public function test_it_never_overwrites_what_the_admin_edited(): void
