@@ -31,9 +31,17 @@
         <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
         <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('favicon-48x48.png') }}">
         <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Fraunces:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Manrope:wght@400&display=swap">
+        {{-- Fonts are self-hosted (resources/css/fonts.css); the two used above the fold start downloading with the HTML. --}}
+        @foreach (['resources/fonts/inter-latin.woff2', 'resources/fonts/fraunces-latin.woff2'] as $font)
+        <link rel="preload" href="{{ Vite::asset($font) }}" as="font" type="font/woff2" crossorigin>
+        @endforeach
+        @if (request()->is('/', 'promociones', 'producto/*'))
+        {{-- The shop fetches the catalogue as soon as the JS runs: start that request (and the product photo) in parallel with the JS download. --}}
+        <link rel="preload" href="/api/products" as="fetch" crossorigin="anonymous">
+        @isset($seo['image'])
+        <link rel="preload" href="{{ $seo['image'] }}" as="image" fetchpriority="high">
+        @endisset
+        @endif
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/index.jsx'])
     </head>

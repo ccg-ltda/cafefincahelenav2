@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './fonts.css';
 @import './demo-home.css';
 @import './demo-origin.css';
 @import './demo-blog.css';

@@ -7,13 +7,29 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BbOfBenf.css",
+    "file": "assets/app-r_t591VC.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
     "names": [
       "app.css"
     ]
+  },
+  "resources/fonts/cormorant-garamond-700-latin.woff2": {
+    "file": "assets/cormorant-garamond-700-latin-DajfzrDU.woff2",
+    "src": "resources/fonts/cormorant-garamond-700-latin.woff2"
+  },
+  "resources/fonts/fraunces-latin.woff2": {
+    "file": "assets/fraunces-latin-ukD16Tqj.woff2",
+    "src": "resources/fonts/fraunces-latin.woff2"
+  },
+  "resources/fonts/inter-latin.woff2": {
+    "file": "assets/inter-latin-Dx4kXJAl.woff2",
+    "src": "resources/fonts/inter-latin.woff2"
+  },
+  "resources/fonts/manrope-400-latin.woff2": {
+    "file": "assets/manrope-400-latin-BA2nI4O_.woff2",
+    "src": "resources/fonts/manrope-400-latin.woff2"
   },
   "resources/images/reference/banner.webp": {
     "file": "assets/banner-BfgeR00R.webp",
