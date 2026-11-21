@@ -33,6 +33,12 @@ final class SpaRoutes
         return self::config()['admin']['pages'];
     }
 
+    /** @return list<array{path: string, title: string}> Pages without sign-in whose link is the credential (no permission). */
+    public static function adminPublicPages(): array
+    {
+        return self::config()['admin']['public'] ?? [];
+    }
+
     /** Head data of an admin page (never indexed). */
     public static function adminSeo(array $page): array
     {

@@ -85,6 +85,28 @@ class AdminSessionController extends Controller
         return response()->json(['changed' => true, 'home' => $user->role->home()]);
     }
 
+    /** Public: is the link of a password page still usable? The same answer for unknown, used, expired or deactivated. */
+    public function checkPasswordLink(Request $request): JsonResponse
+    {
+        $data = $request->validate(['token' => ['required', 'string', 'max:100']]);
+        $link = $this->users->findPasswordLink($data['token']);
+
+        return $link ? response()->json(['valid' => true, 'name' => $link->user->name])
+            : response()->json(['valid' => false, 'message' => 'El enlace no es válido o ya venció. Pide uno nuevo al administrador.'], 422);
+    }
+
+    /** Public: the person chooses their password with a link. They then sign in as usual. */
+    public function usePasswordLink(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'token' => ['required', 'string', 'max:100'],
+            'password' => ['required', 'string', 'min:'.UserService::MIN_PASSWORD, 'max:100', 'confirmed'],
+        ], ['password.min' => 'La contraseña debe tener al menos '.UserService::MIN_PASSWORD.' caracteres.', 'password.confirmed' => 'Las contraseñas no coinciden.'], ['password' => 'contraseña']);
+        $this->users->usePasswordLink($data['token'], $data['password']);
+
+        return response()->json(['ok' => true]);
+    }
+
     public function destroy(Request $request): JsonResponse
     {
         if ($request->user()) {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Copy, Check, Ellipsis, KeyRound, Pencil, Search, UserCheck, UserCog, UserX } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Check, Ellipsis, KeyRound, Link2, Pencil, Search, UserCheck, UserCog, UserX } from 'lucide-react';
 import './AdminProducts.css';
 import './AdminActions.css';
 import './AdminCustomers.css';
@@ -54,6 +54,30 @@ function TemporaryPassword({ person, password, onClose }) {
     </div>, document.body);
 }
 
+// The single-use link is shown ONCE: only its hash is stored. The administrator copies it and hands it to the person.
+function PasswordLink({ person, url, hours, onClose }) {
+    useModalLock();
+    const [copied, setCopied] = useState(false);
+    const close = useRef(null);
+    useEffect(() => { close.current?.focus(); }, []);
+    async function copy() {
+        try { await navigator.clipboard.writeText(url); setCopied(true); window.setTimeout(() => setCopied(false), 2500); } catch { /* the link stays visible to copy by hand */ }
+    }
+    return createPortal(<div className="admin-confirm-layer">
+        <div className="admin-confirm-overlay" aria-hidden="true" />
+        <div className="admin-confirm-dialog admin-users-temp" role="alertdialog" aria-modal="true" aria-labelledby="link-title" aria-describedby="link-text" onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); onClose(); } }}>
+            <div className="admin-confirm-head"><Link2 className="is-ok" aria-hidden="true" /><h2 id="link-title">Enlace para crear contraseña</h2></div>
+            <div className="admin-confirm-body" id="link-text">
+                <p>Envíaselo a <strong>{titleCase(person.name)}</strong> (usuario <code>{person.username}</code>). Con él elegirá su propia contraseña.</p>
+                <div className="admin-users-temp-box"><code aria-label="Enlace" style={{ wordBreak: 'break-all' }}>{url}</code>
+                    <button type="button" className="admin-categories-secondary" onClick={copy}>{copied ? <><Check aria-hidden="true" /> Copiado</> : <><Copy aria-hidden="true" /> Copiar</>}</button></div>
+                <p className="admin-users-warning" role="note">Sirve una sola vez y vence en {hours} horas. No se volverá a mostrar: si lo pierdes, crea otro (el anterior deja de funcionar). Quien tenga el enlace puede fijar la contraseña, envíalo solo a esa persona.</p>
+            </div>
+            <div className="admin-confirm-buttons"><button type="button" ref={close} className="admin-confirm-primary" onClick={onClose}>Listo</button></div>
+        </div>
+    </div>, document.body);
+}
+
 // The administrator sets (or generates) a temporary password for a person who forgot theirs.
 function ResetPasswordDialog({ person, busy, error, opener, onCancel, onConfirm }) {
     const [password, setPassword] = useState(generatePassword);
@@ -81,6 +105,7 @@ export default function AdminUsers({ me }) {
     const [dialogBusy, setDialogBusy] = useState(false);
     const [dialogError, setDialogError] = useState('');
     const [temporary, setTemporary] = useState(null);
+    const [passwordLink, setPasswordLink] = useState(null); // { person, url, hours }: shown once
     const skipUrl = useRef(true);
 
     const queryString = () => {
@@ -151,6 +176,9 @@ export default function AdminUsers({ me }) {
                 await request(`/admin/users/${person.id}/deactivate`, { method: 'PATCH' });
                 toast.success('Persona desactivada', `${titleCase(person.name)} ya no puede entrar y sus sesiones se cerraron.`);
                 setDialog(null); refresh();
+            } else if (type === 'link') {
+                const response = await request(`/admin/users/${person.id}/password-link`, { method: 'POST' });
+                setDialog(null); setPasswordLink({ person: response.data, url: response.link, hours: response.valid_hours });
             } else {
                 const response = await request(`/admin/users/${person.id}/reset-password`, { method: 'POST', ...json({ password }) });
                 setDialog(null); setTemporary({ person: response.data, password: response.temporary_password }); refresh();
@@ -185,7 +213,10 @@ export default function AdminUsers({ me }) {
             onSaved={(person, password) => { setDrawer(null); refresh(); if (password) setTemporary({ person, password }); else toast.success('Cambios guardados', `${titleCase(person.name)} se actualizó.`); }} />}
         {dialog?.type === 'deactivate' && <AdminConfirmDialog title={`¿Desactivar a ${titleCase(dialog.person.name)}?`} confirmLabel="Desactivar" busy={dialogBusy} error={dialogError} opener={dialog.opener} onCancel={() => { setDialog(null); setDialogError(''); }} onConfirm={() => confirmDialog()}>
             <p>No podrá entrar al panel y sus sesiones abiertas se cerrarán al instante. Puedes reactivarla cuando quieras; las personas nunca se borran.</p></AdminConfirmDialog>}
+        {dialog?.type === 'link' && <AdminConfirmDialog title={`Crear enlace para ${titleCase(dialog.person.name)}`} confirmLabel="Crear enlace" tone="primary" busy={dialogBusy} error={dialogError} opener={dialog.opener} onCancel={() => { setDialog(null); setDialogError(''); }} onConfirm={() => confirmDialog()}>
+            <p>Se creará un enlace de un solo uso, válido por 24 horas, para que la persona elija su contraseña. Cualquier enlace anterior dejará de funcionar. Sus sesiones abiertas siguen activas hasta que lo use.</p></AdminConfirmDialog>}
         {dialog?.type === 'reset' && <ResetPasswordDialog person={dialog.person} busy={dialogBusy} error={dialogError} opener={dialog.opener} onCancel={() => { setDialog(null); setDialogError(''); }} onConfirm={confirmDialog} />}
+        {passwordLink && <PasswordLink person={passwordLink.person} url={passwordLink.url} hours={passwordLink.hours} onClose={() => setPasswordLink(null)} />}
         {temporary && <TemporaryPassword person={temporary.person} password={temporary.password} onClose={() => setTemporary(null)} />}
 
         <div className="dashboard-card admin-products-list">
@@ -201,6 +232,7 @@ export default function AdminUsers({ me }) {
                         <span className="admin-users-menu-wrap"><button type="button" className="admin-users-more" aria-haspopup="menu" aria-expanded={menu === row.id} aria-label={`Más acciones de ${titleCase(row.name)}`} onClick={() => setMenu(menu === row.id ? null : row.id)}><Ellipsis aria-hidden="true" /></button>
                             {menu === row.id && <div className="admin-users-menu" role="menu">
                                 {!row.is_self && <button type="button" role="menuitem" onClick={event => { setMenu(null); setDialogError(''); setDialog({ type: 'reset', person: row, opener: event.currentTarget }); }}><KeyRound aria-hidden="true" />Restablecer contraseña</button>}
+                                {!row.is_self && row.is_active && <button type="button" role="menuitem" onClick={event => { setMenu(null); setDialogError(''); setDialog({ type: 'link', person: row, opener: event.currentTarget }); }}><Link2 aria-hidden="true" />Crear enlace de contraseña</button>}
                                 {row.is_active ? (!row.is_self && <button type="button" role="menuitem" onClick={event => { setMenu(null); setDialogError(''); setDialog({ type: 'deactivate', person: row, opener: event.currentTarget }); }}><UserX aria-hidden="true" />Desactivar</button>)
                                     : <button type="button" role="menuitem" onClick={() => reactivate(row)}><UserCheck aria-hidden="true" />Reactivar</button>}
                                 {row.is_self && <p className="admin-users-menu-note">No puedes desactivarte ni restablecer tu propia contraseña.</p>}

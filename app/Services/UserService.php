@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Enums\Role;
 use App\Models\Order;
 use App\Models\User;
+use App\Models\UserPasswordLink;
 use App\Support\ActivityDiff;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -18,6 +20,9 @@ use Illuminate\Validation\ValidationException;
 class UserService
 {
     public const MIN_PASSWORD = 10;
+
+    /** How long a password link works. */
+    public const LINK_HOURS = 24;
 
     public function __construct(private readonly ActivityLogger $activity) {}
 
@@ -143,6 +148,60 @@ class UserService
             $user->forceFill(['password' => $password, 'must_change_password' => false])->save();
             $this->closeSessions($user);
             $this->activity->log('users', 'password_changed', $user, [], actor: $user);
+
+            return $user;
+        });
+    }
+
+    /**
+     * Creates a single-use link (valid LINK_HOURS) with which the person chooses their own password. Any earlier unused link of theirs
+     * stops working. Returns the clear token ONCE (only its hash is stored): the caller builds the URL.
+     *
+     * @return array{token: string, expires_at: Carbon}
+     */
+    public function createPasswordLink(User $target, User $by): array
+    {
+        if ($target->id === $by->id) {
+            throw ValidationException::withMessages(['user' => ['No puedes crear un enlace para tu propia contraseña.']]);
+        }
+        if (! $target->is_active) {
+            throw ValidationException::withMessages(['user' => ['Reactiva a la persona antes de crearle un enlace.']]);
+        }
+        $token = Str::random(48);
+        $expires = now()->addHours(self::LINK_HOURS);
+
+        DB::transaction(function () use ($target, $by, $token, $expires) {
+            $target = User::query()->lockForUpdate()->findOrFail($target->id);
+            UserPasswordLink::where('user_id', $target->id)->whereNull('used_at')->delete();
+            UserPasswordLink::create(['user_id' => $target->id, 'token_hash' => hash('sha256', $token), 'expires_at' => $expires, 'created_by' => $by->id]);
+            $this->activity->log('users', 'password_link_created', $target, [], actor: $by); // never the token
+        });
+
+        return ['token' => $token, 'expires_at' => $expires];
+    }
+
+    /** The unused, unexpired link of a token whose person is still active, or null (the same answer for every failure). */
+    public function findPasswordLink(string $token): ?UserPasswordLink
+    {
+        $link = UserPasswordLink::with('user')->where('token_hash', hash('sha256', $token))->whereNull('used_at')->where('expires_at', '>', now())->first();
+
+        return $link && $link->user?->is_active ? $link : null;
+    }
+
+    /** The person sets their password through a link: it is used up, their sessions end and they are not asked for a temporary one. */
+    public function usePasswordLink(string $token, string $password): User
+    {
+        return DB::transaction(function () use ($token, $password) {
+            $link = UserPasswordLink::query()->lockForUpdate()->where('token_hash', hash('sha256', $token))->first();
+            $user = $link ? User::query()->lockForUpdate()->find($link->user_id) : null;
+            if (! $link || $link->used_at || $link->expires_at->isPast() || ! $user?->is_active) {
+                throw ValidationException::withMessages(['token' => ['El enlace no es válido o ya venció. Pide uno nuevo al administrador.']]);
+            }
+            $user->forceFill(['password' => $password, 'must_change_password' => false])->save();
+            $link->forceFill(['used_at' => now()])->save();
+            UserPasswordLink::where('user_id', $user->id)->whereNull('used_at')->delete();
+            $this->closeSessions($user);
+            $this->activity->log('users', 'password_changed', $user, [], ['via' => 'enlace'], actor: $user);
 
             return $user;
         });

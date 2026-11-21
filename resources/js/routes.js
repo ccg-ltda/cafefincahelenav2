@@ -10,7 +10,7 @@ export const site = spa.site;
 
 export const storefrontRoutes = spa.storefront.map(route => ({ ...route, pattern: toPattern(route.path) }));
 
-const adminPatterns = [spa.admin.login, ...spa.admin.pages].map(page => toPattern(page.path));
+const adminPatterns = [spa.admin.login, ...(spa.admin.public ?? []), ...spa.admin.pages].map(page => toPattern(page.path));
 
 // Admin parameters in the list are record ids: a non-numeric one is not an admin page.
 export const isAdminPath = pathname => adminPatterns.some(pattern => {

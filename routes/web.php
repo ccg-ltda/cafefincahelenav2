@@ -1,32 +1,38 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Http\Controllers\AdminSessionController;
-use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminActivityController;
 use App\Http\Controllers\AdminCategoryController;
-use App\Http\Controllers\ProductPageController;
-use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\AdminProductController;
-use App\Http\Controllers\AdminProductEditorController;
-use App\Http\Controllers\AdminOrderController;
-use App\Http\Controllers\AdminStockController;
-use App\Http\Controllers\AdminPromotionController;
 use App\Http\Controllers\AdminCouponController;
 use App\Http\Controllers\AdminCustomerController;
-use App\Http\Controllers\AdminWhatsAppController;
-use App\Http\Controllers\AdminActivityController;
-use App\Http\Controllers\PromotionsPageController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminOrderController;
 use App\Http\Controllers\AdminOrderStatusController;
+use App\Http\Controllers\AdminProductController;
+use App\Http\Controllers\AdminProductEditorController;
+use App\Http\Controllers\AdminPromotionController;
+use App\Http\Controllers\AdminSessionController;
+use App\Http\Controllers\AdminStockController;
 use App\Http\Controllers\AdminTodayController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminWhatsAppController;
+use App\Http\Controllers\ProductPageController;
+use App\Http\Controllers\PromotionsPageController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\EnsureStaff;
 use App\Http\Middleware\RequirePagePermission;
 use App\Support\SpaRoutes;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 // The pages the React app renders (admin and storefront) are listed once, in routes/spa.json (also read by resources/js/routes.js).
 Route::get(SpaRoutes::adminLogin()['path'], fn (Request $request) => $request->user()?->is_active ? redirect($request->user()->role->home()) : view('app', ['seo' => SpaRoutes::adminSeo(SpaRoutes::adminLogin())]));
 Route::post('/admin/login', [AdminSessionController::class, 'store']);
+// Public (the link is the credential): the page and its two JSON calls. Strict limit per IP so tokens cannot be guessed.
+foreach (SpaRoutes::adminPublicPages() as $page) {
+    Route::view($page['path'], 'app', ['seo' => SpaRoutes::adminSeo($page)]);
+}
+Route::post('/admin/password-link/check', [AdminSessionController::class, 'checkPasswordLink'])->middleware('throttle:password-link');
+Route::post('/admin/password-link', [AdminSessionController::class, 'usePasswordLink'])->middleware('throttle:password-link');
 
 // "Mis entregas" no longer exists: the old address leads to Hoy (permanent redirect).
 Route::redirect('/admin/deliveries', '/admin/today', 301);
@@ -65,7 +71,6 @@ Route::middleware(EnsureStaff::class)->group(function () {
 
     // dashboard.view
     Route::get('/admin/dashboard/summary', AdminDashboardController::class)->middleware('can:dashboard.view');
-
 
     Route::middleware('can:promotions.manage')->group(function () {
         Route::get('/admin/promotions/data', [AdminPromotionController::class, 'index']);
@@ -138,6 +143,7 @@ Route::middleware(EnsureStaff::class)->group(function () {
         Route::patch('/admin/users/{user}/deactivate', [AdminUserController::class, 'deactivate'])->whereNumber('user');
         Route::patch('/admin/users/{user}/reactivate', [AdminUserController::class, 'reactivate'])->whereNumber('user');
         Route::post('/admin/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->whereNumber('user');
+        Route::post('/admin/users/{user}/password-link', [AdminUserController::class, 'passwordLink'])->whereNumber('user');
     });
 });
 Route::any('/admin/{path}', fn () => abort(404))->where('path', '.*');

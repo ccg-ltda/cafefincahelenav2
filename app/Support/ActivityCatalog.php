@@ -2,14 +2,15 @@
 
 namespace App\Support;
 
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\User;
 use App\Models\Promotion;
+use App\Models\User;
 use App\Models\WhatsappQuickReply;
 use App\Models\WhatsappRequest;
 use Illuminate\Database\Eloquent\Model;
@@ -33,7 +34,7 @@ class ActivityCatalog
         'orders' => ['status_changed', 'updated'],
         'customers' => ['marketing_opted_out', 'exported'],
         'whatsapp' => ['created', 'taken', 'assigned', 'resolved', 'reopened', 'notes_updated', 'quick_reply_updated'],
-        'users' => ['created', 'updated', 'role_changed', 'deactivated', 'reactivated', 'password_reset', 'password_changed'],
+        'users' => ['created', 'updated', 'role_changed', 'deactivated', 'reactivated', 'password_reset', 'password_link_created', 'password_changed'],
         'activity' => ['exported'],
         'auth' => ['login', 'login_failed', 'logout'],
     ];
@@ -42,7 +43,7 @@ class ActivityCatalog
         'created' => 'Creó', 'updated' => 'Actualizó', 'deleted' => 'Eliminó', 'activated' => 'Activó', 'deactivated' => 'Desactivó',
         'status_changed' => 'Cambió estado', 'stock_adjusted' => 'Ajustó stock', 'stock_returned' => 'Devolvió stock', 'exported' => 'Exportó',
         'marketing_opted_out' => 'Marcó "no quiere promociones"', 'taken' => 'Tomó', 'assigned' => 'Asignó', 'resolved' => 'Resolvió', 'reopened' => 'Reabrió',
-        'notes_updated' => 'Actualizó notas', 'role_changed' => 'Cambió el rol', 'password_reset' => 'Restableció contraseña', 'password_changed' => 'Cambió su contraseña', 'reactivated' => 'Reactivó', 'quick_reply_updated' => 'Editó respuesta rápida',
+        'notes_updated' => 'Actualizó notas', 'role_changed' => 'Cambió el rol', 'password_reset' => 'Restableció contraseña', 'password_link_created' => 'Creó enlace de contraseña', 'password_changed' => 'Cambió su contraseña', 'reactivated' => 'Reactivó', 'quick_reply_updated' => 'Editó respuesta rápida',
         'login' => 'Inició sesión', 'login_failed' => 'Intento fallido', 'logout' => 'Cerró sesión',
     ];
 
@@ -93,7 +94,7 @@ class ActivityCatalog
      * Link to each resource that still exists, keyed "type:id". Only rows that still exist get a link.
      * Products, promotions, coupons and categories have no page per record: they open the editor or their module list.
      *
-     * @param  Collection<int, \App\Models\ActivityLog>  $rows
+     * @param  Collection<int, ActivityLog>  $rows
      * @return array<string, string>
      */
     public static function links(Collection $rows): array
