@@ -62,3 +62,4 @@
 }
 @media(min-width:1280px){.today-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.today-card,.today-card.is-entering{transition:none;animation:none}.today-spin{animation-duration:2s}}
+.today-section h2 .today-section-icon{flex:none;color:#7a4728}

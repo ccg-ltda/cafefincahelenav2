@@ -6,6 +6,7 @@ import HomePage from './modules/storefront/HomePage';
 import ProductDetailPage from './modules/catalog/ProductDetailPage';
 import { BlogPage, ArticlePage, OriginPage } from './modules/content/ContentPages';
 import AdminPage from './modules/admin/AdminPage';
+import NotFoundPage from './modules/storefront/NotFoundPage';
 import { isAdminPath, storefrontRoutes } from './routes';
 
 // The `page` of each entry in routes/spa.json picks its component; paths, layouts and titles live in that file.
@@ -33,6 +34,6 @@ export default function App() {
     if (isAdminPath(pathname)) return <AdminPage />;
     return <StorefrontProvider><Routes><Route element={<StorefrontLayout />}>
         {storefrontRoutes.map(route => <Route key={route.path} path={route.pattern} element={PAGES[route.page]} />)}
-        <Route path="*" element={<div className="not-found"><h1>Página no encontrada</h1></div>} />
+        <Route path="*" element={<NotFoundPage />} />
     </Route></Routes></StorefrontProvider>;
 }

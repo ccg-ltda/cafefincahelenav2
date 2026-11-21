@@ -15,6 +15,7 @@ import blogPress from '../../images/reference/blog-2.webp';
 import blogHelena from '../../images/reference/blog-3.webp';
 import helenaPoster from '../../images/reference/helena-poster.webp';
 import originHero from '../../images/reference/origin-hero.webp';
+import error404 from '../../images/reference/error-404.png';
 
 // Explicit imports let Vite validate every referenced image during the build.
 const images = {
@@ -35,6 +36,7 @@ const images = {
     'blog-3.webp': blogHelena,
     'helena-poster.webp': helenaPoster,
     'origin-hero.webp': originHero,
+    'error-404.png': error404,
 };
 
 export function referenceImage(name) {

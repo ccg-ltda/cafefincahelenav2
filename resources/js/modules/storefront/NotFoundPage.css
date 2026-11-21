@@ -1,0 +1,12 @@
+.nf-page{max-width:1000px;margin:0 auto;padding:32px 16px 56px;display:grid;grid-template-columns:1fr;gap:20px;align-items:center;text-align:center}
+.nf-art{max-width:340px;width:100%;margin:0 auto}
+.nf-art img{display:block;width:100%;aspect-ratio:765/940;object-fit:cover;object-position:top;mix-blend-mode:multiply}
+.nf-code{font-family:var(--font-body);font-size:.85rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C8883A}
+.nf-copy h1{font-family:var(--font-display);font-size:clamp(1.9rem,5vw,2.8rem);line-height:1.1;color:#3B1F0E;margin:8px 0 14px}
+.nf-copy p:not(.nf-code){font-family:var(--font-body);font-size:1.05rem;line-height:1.55;color:#6B5040;max-width:46ch;margin:0 auto}
+.nf-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:24px}
+.nf-page .nf-btn{display:inline-flex;align-items:center;min-height:46px;padding:0 24px;border-radius:999px;border:2px solid #3B1F0E;color:#3B1F0E;font:600 .95rem var(--font-body);text-decoration:none;transition:background .15s,color .15s}
+.nf-page .nf-btn:hover,.nf-page .nf-btn:focus-visible{background:#3B1F0E;color:#fff}
+.nf-page .nf-btn.nf-btn-main{background:#2D5A27;border-color:#2D5A27;color:#fff}
+.nf-page .nf-btn.nf-btn-main:hover,.nf-page .nf-btn.nf-btn-main:focus-visible{background:#3A7232;border-color:#3A7232}
+@media (min-width:860px){.nf-page{grid-template-columns:minmax(0,380px) 1fr;gap:56px;padding-top:56px;text-align:left}.nf-copy p:not(.nf-code){margin:0}.nf-actions{justify-content:flex-start}}

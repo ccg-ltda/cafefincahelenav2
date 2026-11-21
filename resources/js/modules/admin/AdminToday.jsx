@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LoaderCircle, MapPin, MessageCircle, Phone, RefreshCw } from 'lucide-react';
+import { House, LoaderCircle, MapPin, MessageCircle, Package, Phone, RefreshCw, Sparkles, Truck } from 'lucide-react';
 import './AdminToday.css';
 import AdminConfirmDialog from './AdminConfirmDialog';
 import StatusBadge from './StatusBadge';
@@ -9,10 +9,10 @@ import { ShipFields, runStep, shipPayload, stepError, useShip } from './orderAct
 
 // The four moments of an order, in the order the work flows. Delivery only gets "shipping" from the server.
 const SECTIONS = {
-    new: { emoji: '🟠', title: 'Nuevos', empty: 'Nada nuevo por empezar.' },
-    preparing: { emoji: '📦', title: 'Preparando', empty: 'Nada en preparación.' },
-    ready: { emoji: '🚚', title: 'Por enviar', empty: 'Nada por enviar.' },
-    shipping: { emoji: '🏠', title: 'Por entregar', empty: 'Nada en camino.' },
+    new: { icon: Sparkles, title: 'Nuevos', empty: 'Nada nuevo por empezar.' },
+    preparing: { icon: Package, title: 'Preparando', empty: 'Nada en preparación.' },
+    ready: { icon: Truck, title: 'Por enviar', empty: 'Nada por enviar.' },
+    shipping: { icon: House, title: 'Por entregar', empty: 'Nada en camino.' },
 };
 // Where a card goes after each step (deliver leaves Hoy).
 const DESTINATION = { prepare: 'preparing', ready: 'ready', ship: 'shipping', deliver: null };
@@ -59,6 +59,12 @@ function OrderCard({ order, section, busy, phase, onStep }) {
             <a href={mapsUrl(order)} target="_blank" rel="noopener noreferrer"><MapPin aria-hidden="true" />Cómo llegar</a>
         </div>}
     </article>;
+}
+
+function SectionIcon({ name }) {
+    const Icon = SECTIONS[name].icon;
+
+    return <Icon className="today-section-icon" size={22} aria-hidden="true" />;
 }
 
 export default function AdminToday({ session }) {
@@ -180,7 +186,7 @@ export default function AdminToday({ session }) {
             </div>
 
             {keys.map(key => <section key={key} id={`today-${key}`} className="today-section" aria-labelledby={`today-${key}-title`}>
-                <h2 id={`today-${key}-title`}><span aria-hidden="true">{SECTIONS[key].emoji}</span> {SECTIONS[key].title}<em>{data.counts[key]}</em></h2>
+                <h2 id={`today-${key}-title`}><SectionIcon name={key} />{SECTIONS[key].title}<em>{data.counts[key]}</em></h2>
                 {data.sections[key].length === 0
                     ? <p className="today-empty">{SECTIONS[key].empty}</p>
                     : <div className="today-list">{data.sections[key].map(order => <OrderCard key={order.id} order={order} section={key} busy={busy === order.id} phase={phase[order.id]} onStep={step} />)}</div>}
