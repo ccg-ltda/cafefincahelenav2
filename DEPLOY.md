@@ -55,15 +55,10 @@ composer install --no-dev --optimize-autoloader
 
 ## 5. Dependencias y compilación del frontend
 
-`public/build` no está en el repositorio: hay que compilarlo en el servidor.
+`public/build` (el frontend ya compilado) **sí está en el repositorio**: se compila en el computador de desarrollo con `npm run build` y se sube con `git push`. El servidor **no necesita Node ni npm**: basta con `git pull`.
 
-```sh
-npm ci
-npm run build
-```
-
-> Usa `npm ci` completo (no `--omit=dev`): Vite, que compila el frontend, es una dependencia de desarrollo.
-> Verifica que **no exista** el archivo `public/hot` (solo se crea con `npm run dev`). Si existe, bórralo: haría que la página busque un servidor de desarrollo.
+> Quien cambie algo de `resources/` debe correr `npm run build` y hacer commit de `public/build` junto con el cambio. Si no, el servidor mostrará la versión anterior del frontend.
+> Verifica que **no exista** el archivo `public/hot` (solo se crea con `npm run dev`, no se sube a git). Si existe en el servidor, bórralo: haría que la página busque un servidor de desarrollo.
 
 ---
 
@@ -257,8 +252,6 @@ Haz esto cada vez que se suban cambios nuevos. **No vuelvas a correr `db:seed` n
    ```sh
    git pull origin main
    composer install --no-dev --optimize-autoloader
-   npm ci
-   npm run build
    ```
 
 4. **Migraciones nuevas** (solo aplica las que faltan; no borra datos existentes):

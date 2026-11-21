@@ -1,0 +1,107 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-QylxGHMV.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/images/reference/banner.webp": {
+    "file": "assets/banner-BfgeR00R.webp",
+    "src": "resources/images/reference/banner.webp"
+  },
+  "resources/images/reference/blog-1.webp": {
+    "file": "assets/blog-1-GXj0EXnr.webp",
+    "src": "resources/images/reference/blog-1.webp"
+  },
+  "resources/images/reference/blog-2.webp": {
+    "file": "assets/blog-2-BGdRCNLx.webp",
+    "src": "resources/images/reference/blog-2.webp"
+  },
+  "resources/images/reference/blog-3.webp": {
+    "file": "assets/blog-3-CaHv1QRp.webp",
+    "src": "resources/images/reference/blog-3.webp"
+  },
+  "resources/images/reference/cafe-125-m.webp": {
+    "file": "assets/cafe-125-m-35PIf8yP.webp",
+    "src": "resources/images/reference/cafe-125-m.webp"
+  },
+  "resources/images/reference/cafe-125-t.webp": {
+    "file": "assets/cafe-125-m-35PIf8yP.webp",
+    "src": "resources/images/reference/cafe-125-m.webp"
+  },
+  "resources/images/reference/cafe-250-m.webp": {
+    "file": "assets/cafe-250-m-Bbhdt2gD.webp",
+    "src": "resources/images/reference/cafe-250-m.webp"
+  },
+  "resources/images/reference/cafe-250-t.webp": {
+    "file": "assets/cafe-250-m-Bbhdt2gD.webp",
+    "src": "resources/images/reference/cafe-250-m.webp"
+  },
+  "resources/images/reference/cafe-25k-m.webp": {
+    "file": "assets/cafe-25k-m-D5Ypo04B.webp",
+    "src": "resources/images/reference/cafe-25k-m.webp"
+  },
+  "resources/images/reference/cafe-25k-t.webp": {
+    "file": "assets/cafe-25k-m-D5Ypo04B.webp",
+    "src": "resources/images/reference/cafe-25k-m.webp"
+  },
+  "resources/images/reference/cafe-340-m.webp": {
+    "file": "assets/cafe-340-m-QtqwWKwf.webp",
+    "src": "resources/images/reference/cafe-340-m.webp"
+  },
+  "resources/images/reference/cafe-340-t.webp": {
+    "file": "assets/cafe-340-m-QtqwWKwf.webp",
+    "src": "resources/images/reference/cafe-340-m.webp"
+  },
+  "resources/images/reference/cafe-500-m.webp": {
+    "file": "assets/cafe-500-m-CMUgqhXY.webp",
+    "src": "resources/images/reference/cafe-500-m.webp"
+  },
+  "resources/images/reference/cafe-500-t.webp": {
+    "file": "assets/cafe-500-m-CMUgqhXY.webp",
+    "src": "resources/images/reference/cafe-500-m.webp"
+  },
+  "resources/images/reference/error-404.png": {
+    "file": "assets/error-404-DtW1eQCY.png",
+    "src": "resources/images/reference/error-404.png"
+  },
+  "resources/images/reference/helena-poster.webp": {
+    "file": "assets/helena-poster-DbtZLMkg.webp",
+    "src": "resources/images/reference/helena-poster.webp"
+  },
+  "resources/images/reference/logo.png": {
+    "file": "assets/logo-WlGOQSgt.png",
+    "src": "resources/images/reference/logo.png"
+  },
+  "resources/images/reference/origin-hero.webp": {
+    "file": "assets/origin-hero-Bowf2B87.webp",
+    "src": "resources/images/reference/origin-hero.webp"
+  },
+  "resources/js/index.jsx": {
+    "file": "assets/index-bfriQK8Q.js",
+    "name": "index",
+    "src": "resources/js/index.jsx",
+    "isEntry": true,
+    "css": [
+      "assets/index-DBe34RYI.css"
+    ],
+    "assets": [
+      "assets/banner-BfgeR00R.webp",
+      "assets/logo-WlGOQSgt.png",
+      "assets/cafe-125-m-35PIf8yP.webp",
+      "assets/cafe-250-m-Bbhdt2gD.webp",
+      "assets/cafe-340-m-QtqwWKwf.webp",
+      "assets/cafe-500-m-CMUgqhXY.webp",
+      "assets/cafe-25k-m-D5Ypo04B.webp",
+      "assets/blog-1-GXj0EXnr.webp",
+      "assets/blog-2-BGdRCNLx.webp",
+      "assets/blog-3-CaHv1QRp.webp",
+      "assets/helena-poster-DbtZLMkg.webp",
+      "assets/origin-hero-Bowf2B87.webp",
+      "assets/error-404-DtW1eQCY.png"
+    ]
+  }
+}
