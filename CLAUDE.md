@@ -11,7 +11,7 @@ Café Finca Helena: Spanish-language (es_CO) coffee storefront + admin panel. La
 ```sh
 php artisan serve          # backend, http://127.0.0.1:8000
 npm run dev                # Vite dev server (use npm.cmd in PowerShell)
-npm run build              # production assets
+npm run build              # production assets: `public/build` IS committed (the server has no Node); rebuild and commit it with every change under resources/
 composer dev               # server + queue + pail logs + vite via concurrently
 composer test              # config:clear + php artisan test
 php artisan test --filter=NameOfTest   # single test (tests/Feature, tests/Unit)
