@@ -84,7 +84,7 @@ export default function ProductDetailPage() {
     return <div className="product-detail">
         <nav className="product-detail-crumb" aria-label="Ruta de navegación"><Link to="/">Tienda</Link> / <Link to="/">Café</Link> / {product.name}</nav>
         <main className="product-detail-main">
-            <div className="product-detail-image"><ProductImage src={variant ? variant.image : null} alt={variant ? variant.name : product.name} width="360" height="360" /></div>
+            <div className="product-detail-image"><ProductImage src={variant ? variant.image : null} alt={variant ? variant.name : product.name} width="360" height="360" fetchPriority="high" decoding="async" /></div>
             <div className="product-detail-info">
                 {!configurable && variant?.grind && <span className="product-detail-badge">{variant.grind}</span>}
                 <h1>{product.name}</h1>

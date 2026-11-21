@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Coffee, FileText, Minus, Plus, RotateCcw, ScrollText, ShoppingCart, Tags, Truck, X } from 'lucide-react';
 import { useStorefront } from '../../context/StorefrontContext';
 import ProductImage from '../catalog/ProductImage';
 import { untilText } from '../catalog/variant';
 import { money } from '../catalog/ProductCard';
 import content from '../content/referenceContent.json';
-import CheckoutModal from './CheckoutModal';
+const CheckoutModal = lazy(() => import('./CheckoutModal')); // only downloaded when the shopper starts the checkout
 
 export default function StoreOverlays() {
     const { items, changeQuantity, cartNotice, dismissCartNotice, drawer, setDrawer, checkout, setCheckout, policy, setPolicy } = useStorefront();
@@ -41,6 +41,6 @@ export default function StoreOverlays() {
             <div className="drawer-foot"><div className="drawer-total"><span>Subtotal</span><span>{money(total)}</span></div>{savings > 0 && <div className="drawer-savings"><span>Ahorras</span><span>{money(savings)}</span></div>}<button className="checkout-btn" disabled={!items.length} onClick={() => {setDrawer(false);setCheckout(true);}}><ShoppingCart className="ui-icon" aria-hidden="true" /> Continuar con el pedido</button><div className="checkout-note">Tu pedido queda registrado y te contactamos para coordinar el pago.</div><p className="preview-note">El pago en línea aún no está disponible.</p></div>
         </aside>
         {cartNotice.length > 0 && <div className="stock-notice" role="alert"><div><strong>Actualizamos tu carrito</strong><ul>{cartNotice.map(message => <li key={message}>{message}</li>)}</ul></div><button type="button" onClick={dismissCartNotice}>Entendido</button></div>}
-        {checkout && <CheckoutModal items={items} onClose={() => setCheckout(false)} onRegistered={() => items.forEach(item => changeQuantity(item.id, 0))} onFix={fixes => fixes.forEach(fix => changeQuantity(fix.id, fix.quantity))} />}
+        {checkout && <Suspense fallback={null}><CheckoutModal items={items} onClose={() => setCheckout(false)} onRegistered={() => items.forEach(item => changeQuantity(item.id, 0))} onFix={fixes => fixes.forEach(fix => changeQuantity(fix.id, fix.quantity))} /></Suspense>}
     </>;
 }

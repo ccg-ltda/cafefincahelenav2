@@ -28,7 +28,7 @@
 .demo-blog .cta{margin-top:40px;background:var(--verde);color:#fff;border-radius:20px;padding:28px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
 .demo-blog .cta p{font-family:var(--font-display);font-size:22px;font-weight:700}
 .demo-blog .cta a{background:#fff;color:var(--verde);font-weight:700;padding:12px 22px;border-radius:999px}
-.demo-blog .bhero{width:100%;aspect-ratio:1920/570;max-height:520px;background:#2a1a0e url('../images/reference/demo-blog-background-1.webp') center/cover no-repeat;color:#fff;position:relative}
+.demo-blog .bhero{width:100%;aspect-ratio:1920/570;max-height:520px;background:#2a1a0e url('/resources/images/reference/demo-blog-background-1.webp') center/cover no-repeat;color:#fff;position:relative}
 .demo-blog .bhero .wrap{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
 .demo-blog .bhero h1{color:#fff;font-size:clamp(32px,5vw,54px);margin:10px 0 10px}
 .demo-blog .bhero p{max-width:560px;color:rgba(255,255,255,.88);font-size:17px}

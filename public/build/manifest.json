@@ -1,6 +1,13 @@
 {
+  "_index-C0B2xkU2.js": {
+    "file": "assets/index-C0B2xkU2.js",
+    "name": "index",
+    "imports": [
+      "resources/js/index.jsx"
+    ]
+  },
   "resources/css/app.css": {
-    "file": "assets/app-QylxGHMV.css",
+    "file": "assets/app-BbOfBenf.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -64,6 +71,22 @@
     "file": "assets/cafe-500-m-CMUgqhXY.webp",
     "src": "resources/images/reference/cafe-500-m.webp"
   },
+  "resources/images/reference/demo-blog-background-1.webp": {
+    "file": "assets/demo-blog-background-1-BAHRaK0s.webp",
+    "src": "resources/images/reference/demo-blog-background-1.webp"
+  },
+  "resources/images/reference/demo-home-background-1.webp": {
+    "file": "assets/demo-home-background-1-xF-zvdkm.webp",
+    "src": "resources/images/reference/demo-home-background-1.webp"
+  },
+  "resources/images/reference/demo-home-background-2.webp": {
+    "file": "assets/demo-home-background-1-xF-zvdkm.webp",
+    "src": "resources/images/reference/demo-home-background-1.webp"
+  },
+  "resources/images/reference/demo-origin-background-1.webp": {
+    "file": "assets/origin-hero-Bowf2B87.webp",
+    "src": "resources/images/reference/demo-origin-background-1.webp"
+  },
   "resources/images/reference/error-404.png": {
     "file": "assets/error-404-DtW1eQCY.png",
     "src": "resources/images/reference/error-404.png"
@@ -78,15 +101,22 @@
   },
   "resources/images/reference/origin-hero.webp": {
     "file": "assets/origin-hero-Bowf2B87.webp",
-    "src": "resources/images/reference/origin-hero.webp"
+    "src": "resources/images/reference/demo-origin-background-1.webp"
   },
   "resources/js/index.jsx": {
-    "file": "assets/index-bfriQK8Q.js",
+    "file": "assets/index-DlTGNsAB.js",
     "name": "index",
     "src": "resources/js/index.jsx",
     "isEntry": true,
+    "dynamicImports": [
+      "resources/js/modules/storefront/CheckoutModal.jsx",
+      "resources/js/modules/admin/AdminPage.jsx",
+      "resources/js/modules/content/ContentPages.jsx",
+      "resources/js/modules/content/ContentPages.jsx",
+      "resources/js/modules/content/ContentPages.jsx"
+    ],
     "css": [
-      "assets/index-DBe34RYI.css"
+      "assets/index-DDAig7-x.css"
     ],
     "assets": [
       "assets/banner-BfgeR00R.webp",
@@ -102,6 +132,38 @@
       "assets/helena-poster-DbtZLMkg.webp",
       "assets/origin-hero-Bowf2B87.webp",
       "assets/error-404-DtW1eQCY.png"
+    ]
+  },
+  "resources/js/modules/admin/AdminPage.jsx": {
+    "file": "assets/AdminPage-CPFmX7Ex.js",
+    "name": "AdminPage",
+    "src": "resources/js/modules/admin/AdminPage.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/index.jsx",
+      "_index-C0B2xkU2.js"
+    ],
+    "css": [
+      "assets/AdminPage-wNptuHEx.css"
+    ]
+  },
+  "resources/js/modules/content/ContentPages.jsx": {
+    "file": "assets/ContentPages-D8aRq6B6.js",
+    "name": "ContentPages",
+    "src": "resources/js/modules/content/ContentPages.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/index.jsx"
+    ]
+  },
+  "resources/js/modules/storefront/CheckoutModal.jsx": {
+    "file": "assets/CheckoutModal-CVDVEyug.js",
+    "name": "CheckoutModal",
+    "src": "resources/js/modules/storefront/CheckoutModal.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/index.jsx",
+      "_index-C0B2xkU2.js"
     ]
   }
 }
